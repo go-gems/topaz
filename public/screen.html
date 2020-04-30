@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+        <link rel="stylesheet" href="main.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.13.0/css/duotone.css" integrity="sha384-oRY9z8lvkaf2a1RyLPsz9ba5IbYiz1X/udoO3kZH3WM+gidZ+eELnojAqaBwvAmB" crossorigin="anonymous"> 
+        <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.13.0/css/fontawesome.css" integrity="sha384-tSxOKkJ+YPQOZg1RZd01upxL2FeeFVkHtkL0+04oWgcm9jnvH+EQNLxhpaNYblG2" crossorigin="anonymous">
+    </head>
+
+    <body>
+        <div class="videos">
+            <div>
+                <video id="localVideo" autoplay muted playsinline ></video>
+                <i id="mute-button"class="fad fa-2x fa-microphone" onclick="muteOrUnmute()"></i>            </div>
+        </div>
+        
+        <br />
+        <div id="connections"></div>
+
+        <script src="socket.io/socket.io.js"></script>
+        <script src="config.js"></script>
+        <script src="webrtc-screen.js"></script>
+
+        <script type="text/javascript">
+            pageReady();
+        </script>
+
+    </body>
+</html>

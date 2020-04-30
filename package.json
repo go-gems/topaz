@@ -1,0 +1,12 @@
+{
+  "name": "sapphire",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "2.5.8"
+  },
+  "devDependencies": {
+    "http": "0.0.0",
+    "socket.io": "^1.7.3"
+  }
+}
