@@ -1,14 +1,19 @@
-var localVideo;
-var firstPerson = false;
-var socketCount = 0;
-var devmode = true;
-var socketId;
-var localStream;
-var screenStream;
-var connections = [];
-var videotracks = [];
-var screensharing = false;
-var peerConnectionConfig = {
+let localVideo;
+let firstPerson = false;
+let socketCount = 0;
+let devmode = true;
+let socketId;
+let localStream;
+let screenStream;
+let connections = [];
+let videotracks = [];
+let screensharing = false;
+let videoEnabled = true
+let audioEnabled = true
+let peerConnection = null
+let cameraId = null
+let microphoneId = null
+let peerConnectionConfig = {
     'iceServers': [
         {'urls': 'stun:stun.services.mozilla.com'},
         {'urls': 'stun:stun.l.google.com:19302'},
@@ -26,31 +31,30 @@ function _startScreenCapture() {
 }
 
 function toggleSound() {
-    button = document.querySelector("#sound-button");
-    localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled;
-    if (localStream.getAudioTracks()[0].enabled) {
+    let button = document.querySelector("#sound-button");
+    audioEnabled = !audioEnabled
+    localStream.getAudioTracks()[0].enabled = audioEnabled;
+    if (audioEnabled) {
         button.classList.add("fa-microphone");
         button.classList.remove("fa-microphone-slash");
-    } else {
-
-        button.classList.add("fa-microphone-slash");
-        button.classList.remove("fa-microphone");
-
+        return
     }
+
+    button.classList.add("fa-microphone-slash");
+    button.classList.remove("fa-microphone");
 }
 
 function toggleVideo() {
-    button = document.querySelector("#video-button");
-    localStream.getVideoTracks()[0].enabled = !localStream.getVideoTracks()[0].enabled;
-    if (localStream.getVideoTracks()[0].enabled) {
+    let button = document.querySelector("#video-button");
+    videoEnabled = !videoEnabled
+    localStream.getVideoTracks()[0].enabled = videoEnabled
+    if (videoEnabled) {
         button.classList.add("fa-video");
         button.classList.remove("fa-video-slash");
-    } else {
-
-        button.classList.add("fa-video-slash");
-        button.classList.remove("fa-video");
-
+        return
     }
+    button.classList.add("fa-video-slash");
+    button.classList.remove("fa-video");
 }
 
 function shareScreen() {
@@ -84,12 +88,115 @@ function shareVideo() {
     }
 }
 
+function getStream() {
+    return new Promise((resolve, reject) => {
+        let constraints = {
+            video: true,
+            audio: true
+        }
+
+        if (cameraId !== null) {
+            constraints.video = {
+                deviceId: {
+                    exact: cameraId
+                }
+            }
+        }
+        if (microphoneId !== null) {
+            constraints.audio = {
+                deviceId: {
+                    exact: microphoneId
+                }
+            }
+        }
+
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+                resolve(stream)
+            })
+    })
+
+}
+
+
+function replaceStream(stream) {
+    getUserMediaSuccess(stream)
+
+    //We need to replace both the audio and video tracks otherwise we have some reference problems
+    let videoTrack = localStream.getVideoTracks()[0]
+    let audioTrack = localStream.getAudioTracks()[0]
+
+    for (let id of Object.keys(connections)) {
+        if (id === socketId) {
+            continue
+        }
+        let connection = connections[id]
+
+        let videoSender = connection.getSenders().find(s => {
+            return s.track.kind === videoTrack.kind
+        })
+        let audioSender = connection.getSenders().find(s => {
+            return s.track.kind === audioTrack.kind
+        })
+        console.log("found video sender : ", videoSender)
+        videoSender.replaceTrack(videoTrack)
+        console.log("found audio sender : ", audioSender)
+        audioSender.replaceTrack(audioTrack)
+    }
+
+    //To make sure camera or microphone stay disabled if it was already
+    localStream.getVideoTracks()[0].enabled = videoEnabled
+    localStream.getAudioTracks()[0].enabled = audioEnabled
+}
+
+
+async function loadDevices() {
+    if (await navigator.mediaDevices.getUserMedia({video: true, audio: true})) {
+        navigator.mediaDevices.enumerateDevices()
+            .then(devices => {
+                for (let device of devices) {
+                    switch (device.kind) {
+                        case "audioinput":
+                            document.querySelector("#audioInputDevices").appendChild(
+                                htmlToElement(`<option value="${device.deviceId}">${device.label}</option>`)
+                            )
+                            break;
+                        case "videoinput":
+                            document.querySelector("#videoInputDevices").appendChild(
+                                htmlToElement(`<option value="${device.deviceId}">${device.label}</option>`)
+                            )
+                            break
+                        default:
+                            break
+                    }
+                }
+            })
+
+        document.querySelector("#audioInputDevices").addEventListener("change", e => {
+            microphoneId = e.target.value
+            getStream()
+                .then(stream => {
+                    replaceStream(stream)
+                })
+        })
+        document.querySelector("#videoInputDevices").addEventListener("change", e => {
+            cameraId = e.target.value
+            getStream()
+                .then(stream => {
+                    replaceStream(stream)
+                })
+        })
+
+    }
+}
+
 function pageReady() {
 
     localVideo = document.getElementById('localVideo');
     remoteVideo = document.getElementById('remoteVideo');
 
-    var constraints = {
+    loadDevices()
+    let constraints = {
         video: true,
         audio: true,
     };
@@ -232,4 +339,11 @@ function gotMessageFromServer(fromId, message) {
             connections[fromId].addIceCandidate(new RTCIceCandidate(signal.ice)).catch(e => console.log(e));
         }
     }
+}
+
+function htmlToElement(html) {
+    let template = document.createElement('template');
+    html = html.trim(); // Never return a text node of whitespace as the result
+    template.innerHTML = html;
+    return template.content.firstChild;
 }
