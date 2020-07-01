@@ -29,11 +29,11 @@ video#localVideo {
     color: #FFF;
 }
 
-.local-video {
+.local-video, .remote-video {
     position: relative;
 }
 
-.controls {
+.controls, .remote-inputs-statuses {
     position: absolute;
     display: flex;
     bottom: 0;
@@ -50,6 +50,21 @@ video#localVideo {
     box-sizing: border-box;
     opacity: 0.30;
 }
+.remote-input-status {
+    flex: 1 1 auto;
+    width: 50%;
+    text-align: center;
+    padding: 10px;
+    box-sizing: border-box;
+    color: #9e372c;
+    opacity: 0.7;
+    display: none !important;
+}
+
+.status-disabled {
+    display: block !important;
+}
+
 
 .button:hover {
     color: #CCC;
