@@ -22,6 +22,16 @@ io.on('connection', function(socket){
 		io.sockets.emit("broadcast-message", socket.id, data);
     })
 
+	socket.on("sound-status-changed", status => {
+		//Sends to everyone but the sender
+		socket.broadcast.emit("sound-status-changed", {id: socket.id, status})
+	})
+
+	socket.on("video-status-changed", status => {
+		//Sends to everyone but the sender
+		socket.broadcast.emit("video-status-changed", {id: socket.id, status})
+	})
+
 	socket.on('disconnect', function() {
 		io.sockets.emit("user-left", socket.id);
 	})

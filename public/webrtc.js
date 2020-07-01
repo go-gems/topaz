@@ -34,6 +34,11 @@ function toggleSound() {
     let button = document.querySelector("#sound-button");
     audioEnabled = !audioEnabled
     localStream.getAudioTracks()[0].enabled = audioEnabled;
+
+    if (socket) {
+        socket.emit("sound-status-changed", audioEnabled)
+    }
+
     if (audioEnabled) {
         button.classList.add("fa-microphone");
         button.classList.remove("fa-microphone-slash");
@@ -48,6 +53,11 @@ function toggleVideo() {
     let button = document.querySelector("#video-button");
     videoEnabled = !videoEnabled
     localStream.getVideoTracks()[0].enabled = videoEnabled
+
+    if (socket) {
+        socket.emit("video-status-changed", videoEnabled)
+    }
+
     if (videoEnabled) {
         button.classList.add("fa-video");
         button.classList.remove("fa-video-slash");
@@ -235,6 +245,24 @@ function pageReady() {
 
                     })
 
+                    socket.on("video-status-changed", data => {
+
+                        let video = document.querySelector('[data-socket="' + data.id + '"]');
+                        if (video) {
+                            let indicator = video.parentElement.querySelector(".remote-video-status")
+                            data.status ? indicator.classList.remove("status-disabled") : indicator.classList.add("status-disabled")
+                        }
+                    })
+
+                    socket.on("sound-status-changed", data => {
+
+                        let video = document.querySelector('[data-socket="' + data.id + '"]');
+                        if (video) {
+                            let indicator = video.parentElement.querySelector(".remote-sound-status")
+                            data.status ? indicator.classList.remove("status-disabled") : indicator.classList.add("status-disabled")
+                        }
+                    })
+
                     socket.on('user-joined', function (id, count, clients) {
                         let src = '/on.mp3';
                         let audio = new Audio(src);
@@ -296,9 +324,17 @@ function getUserMediaSuccess(stream) {
 
 function gotRemoteStream(event, id) {
 
-    var videos = document.querySelectorAll('video'),
-        video = document.createElement('video'),
+    let video = document.createElement('video'),
+
+        inputsStatuses = htmlToElement(`
+        <div class="remote-inputs-statuses">
+            <i class="remote-sound-status remote-input-status fas fa-microphone-slash"></i>
+            <i class="remote-video-status remote-input-status fas fa-video-slash"></i>
+        </div>
+        `),
         div = document.createElement('div')
+
+    div.classList.add("remote-video")
 
     video.setAttribute('data-socket', id);
     try {
@@ -312,6 +348,7 @@ function gotRemoteStream(event, id) {
     video.playsinline = true;
 
     div.appendChild(video);
+    div.appendChild(inputsStatuses)
     document.querySelector('.videos').appendChild(div);
 }
 
