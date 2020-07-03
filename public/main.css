@@ -1,39 +1,36 @@
-.videos {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
+body {
+    margin: 0;
+    overflow: hidden;
 }
 
-.videos > div {
-    float: left;
-    width: 300px;
-    height: 225px;
-    background-color: black;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid grey;
+.videos {
+
+    background-color: rgb(41, 41, 41);
+    width: 100vw;
+    height: 100vh;
+    display: grid;
 }
 
 video {
-    max-width: 100%;
-    max-height: 100%;
-    flex: 1 1 auto;
-}
-
-video#localVideo {
     display: block;
-
+    height: 100%;
+    width: 100%;
 }
 
-.fas {
-    color: #FFF;
+.video {
+    display: block;
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+    background-color: rgb(30, 30, 30);
 }
+
 
 .local-video, .remote-video {
     position: relative;
 }
 
-.controls, .remote-inputs-statuses {
+.remote-inputs-statuses {
     position: absolute;
     display: flex;
     bottom: 0;
@@ -43,12 +40,19 @@ video#localVideo {
 .button {
     display: block;
     cursor: pointer;
-    flex: 1 1 auto;
-    width: 50%;
-    text-align: center;
-    padding: 10px;
-    box-sizing: border-box;
-    opacity: 0.30;
+    /*flex: 1 1 auto;*/
+    /*width: 50%;*/
+    /*text-align: center;*/
+    /*padding: 10px;*/
+    /*box-sizing: border-box;*/
+    /*opacity: 0.30;*/
+    color: black;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    width: 70px;
 }
 .remote-input-status {
     flex: 1 1 auto;
@@ -76,4 +80,15 @@ video#localVideo {
     width: 100vw !important;
     height: 100vh !important;
     position: absolute;
+}
+
+#bottom-bar {
+    position: absolute;
+    bottom: 0;
+    z-index: 10;
+    background-color: white;
+    height: 50px;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
 }

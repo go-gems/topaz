@@ -10,7 +10,6 @@ let videotracks = [];
 let screensharing = false;
 let videoEnabled = true
 let audioEnabled = true
-let peerConnection = null
 let cameraId = null
 let microphoneId = null
 let peerConnectionConfig = {
@@ -235,6 +234,8 @@ function pageReady() {
                         let src = '/off.mp3';
                         let audio = new Audio(src);
                         audio.play();
+                        delete connections[id]
+                        updateCSS()
                     });
                     socket.on('fullscreen', function (id) {
                         var video = document.querySelector('[data-socket="' + id + '"]');
@@ -320,6 +321,7 @@ function getUserMediaSuccess(stream) {
     } catch (error) {
         localVideo.src = window.URL.createObjectURL(stream);
     }
+    updateCSS()
 }
 
 function gotRemoteStream(event, id) {
@@ -335,6 +337,7 @@ function gotRemoteStream(event, id) {
         div = document.createElement('div')
 
     div.classList.add("remote-video")
+    div.classList.add("video")
 
     video.setAttribute('data-socket', id);
     try {
@@ -350,6 +353,8 @@ function gotRemoteStream(event, id) {
     div.appendChild(video);
     div.appendChild(inputsStatuses)
     document.querySelector('.videos').appendChild(div);
+    updateCSS()
+
 }
 
 function gotMessageFromServer(fromId, message) {
@@ -376,6 +381,25 @@ function gotMessageFromServer(fromId, message) {
             connections[fromId].addIceCandidate(new RTCIceCandidate(signal.ice)).catch(e => console.log(e));
         }
     }
+}
+
+
+function updateCSS() {
+    let container = document.querySelector(".videos")
+    let countCam = Object.keys(connections).length > 0 ? Object.keys(connections).length : 1
+    let divider = 1;
+
+    while (countCam > divider * divider) {
+        divider++;
+    }
+    let rowDivider = divider
+
+    if (countCam < 3) {
+        rowDivider = 1
+    }
+
+    container.style.gridTemplateColumns="repeat("+divider+",1fr)"
+    container.style.gridTemplateRows="repeat("+rowDivider+",1fr)"
 }
 
 function htmlToElement(html) {

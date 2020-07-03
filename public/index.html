@@ -11,34 +11,39 @@
 
 <body>
 <div class="videos">
-    <div class="local-video">
+    <div class="local-video video">
         <video id="localVideo" autoplay muted playsinline></video>
-        <div class="controls">
-            <div class="button" onclick="toggleSound()">
-                <i id="sound-button" class="fas fa-microphone"></i>
-            </div>
-            <div class="button" onclick="toggleVideo()">
-                <i id="video-button" class="fas fa-video"></i>
-            </div>
-        </div>
+
     </div>
 </div>
-<div>
-    <label for="videoInputDevices">Select your camera</label>
-    <select  id="videoInputDevices">
 
-    </select>
-
-</div>
-<div>
-    <label for="audioInputDevices">Select your microphone</label>
-    <select  id="audioInputDevices">
-
-    </select>
-</div>
 
 <br/>
-<div id="connections"></div>
+
+
+<!--<div id="bottom-bar">-->
+<!--    <div class="controls">-->
+<!--        <div class="button" onclick="toggleSound()">-->
+<!--            <i id="sound-button" class="fas fa-microphone"></i>-->
+<!--        </div>-->
+<!--        <div class="button" onclick="toggleVideo()">-->
+<!--            <i id="video-button" class="fas fa-video"></i>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    <div>-->
+<!--        <label for="videoInputDevices">Select your camera</label>-->
+<!--        <select  id="videoInputDevices">-->
+
+<!--        </select>-->
+
+<!--    </div>-->
+<!--    <div>-->
+<!--        <label for="audioInputDevices">Select your microphone</label>-->
+<!--        <select  id="audioInputDevices">-->
+
+<!--        </select>-->
+<!--    </div>-->
+<!--</div>-->
 
 <script src="socket.io/socket.io.js"></script>
 <script src="config.js"></script>
