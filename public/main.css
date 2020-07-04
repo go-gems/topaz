@@ -1,14 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap');
+
 body {
     margin: 0;
     overflow: hidden;
+    font-family: Roboto, sans-serif;
 }
 
 .videos {
 
     background-color: rgb(41, 41, 41);
     width: 100vw;
-    height: 100vh;
+    height: calc(100vh - 50px);
     display: grid;
+    float: left;
 }
 
 video {
@@ -21,13 +25,26 @@ video {
     display: block;
     height: 100%;
     width: 100%;
-    min-width: 0;
+    min-height: max-content;
     background-color: rgb(30, 30, 30);
 }
 
 
 .local-video, .remote-video {
     position: relative;
+}
+
+#pinned-video{
+    width: 70vw;
+    height: 100vh;
+    display: none;
+    float:left;
+    background-color: rgb(30, 30, 30);
+
+}
+
+.reduced{
+    width: 30vw;
 }
 
 .remote-inputs-statuses {
@@ -91,4 +108,56 @@ video {
     width: 100vw;
     display: flex;
     justify-content: center;
+    align-items: center;
+    font-size: large;
+}
+
+#parameters-modal {
+    display: none;
+    position: fixed;
+    z-index: 20;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    height: 220px;
+    width: 300px;
+    box-shadow: 0 0 20px 15px rgba(0,0,0,0.1);
+    border-radius: 5px;
+}
+
+#parameters-modal h2 {
+    text-align: center;
+}
+
+#close-parameters-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+#parameters-button {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+}
+
+.input-selection-wrapper {
+    margin-left: auto;
+    margin-right: auto;
+    width: 200px;
+    margin-bottom: 15px;
+}
+
+.input-selection-wrapper select {
+    width: 200px;
+    margin-top: 5px;
+    height: 30px;
+    border: none;
+    border-radius: 3px;
+    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+    background-color: white;
 }

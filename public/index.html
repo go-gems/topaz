@@ -16,34 +16,42 @@
 
     </div>
 </div>
+<div id="pinned-video"></div>
 
 
 <br/>
 
 
-<!--<div id="bottom-bar">-->
-<!--    <div class="controls">-->
-<!--        <div class="button" onclick="toggleSound()">-->
-<!--            <i id="sound-button" class="fas fa-microphone"></i>-->
-<!--        </div>-->
-<!--        <div class="button" onclick="toggleVideo()">-->
-<!--            <i id="video-button" class="fas fa-video"></i>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--    <div>-->
-<!--        <label for="videoInputDevices">Select your camera</label>-->
-<!--        <select  id="videoInputDevices">-->
+<div id="bottom-bar">
+    <div class="controls">
+        <div class="button" onclick="toggleSound()">
+            <i id="sound-button" class="fas fa-microphone"></i>
+        </div>
+        <div class="button" onclick="toggleVideo()">
+            <i id="video-button" class="fas fa-video"></i>
+        </div>
+    </div>
+    <div id="parameters">
+        <i id="parameters-button" onclick="toggleParameters()" class="fas fa-cog"></i>
+        <div id="parameters-modal">
+            <h2 id="parameters-title">Parameters</h2>
+            <i id="close-parameters-button" onclick="toggleParameters()" class="fas fa-times"></i>
+            <div class="input-selection-wrapper">
+                <label >Select your camera</label>
+                <select  id="videoInputDevices">
 
-<!--        </select>-->
+                </select>
 
-<!--    </div>-->
-<!--    <div>-->
-<!--        <label for="audioInputDevices">Select your microphone</label>-->
-<!--        <select  id="audioInputDevices">-->
+            </div>
+            <div class="input-selection-wrapper">
+                <label >Select your microphone</label>
+                <select  id="audioInputDevices">
 
-<!--        </select>-->
-<!--    </div>-->
-<!--</div>-->
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="socket.io/socket.io.js"></script>
 <script src="config.js"></script>

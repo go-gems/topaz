@@ -8,6 +8,8 @@ let screenStream;
 let connections = [];
 let videotracks = [];
 let screensharing = false;
+let showParameters = false
+let pinnedVideo = null
 let videoEnabled = true
 let audioEnabled = true
 let cameraId = null
@@ -64,6 +66,13 @@ function toggleVideo() {
     }
     button.classList.add("fa-video-slash");
     button.classList.remove("fa-video");
+}
+
+function toggleParameters() {
+    let parametersModal = document.querySelector("#parameters-modal")
+    parametersModal.style.display = showParameters ? "none" : "block"
+    showParameters = !showParameters
+    console.log(showParameters)
 }
 
 function shareScreen() {
@@ -204,6 +213,8 @@ function pageReady() {
     localVideo = document.getElementById('localVideo');
     remoteVideo = document.getElementById('remoteVideo');
 
+    window.onresize = updateCSS
+
     loadDevices()
     let constraints = {
         video: true,
@@ -230,6 +241,10 @@ function pageReady() {
                     socket.on('user-left', function (id) {
                         var video = document.querySelector('[data-socket="' + id + '"]');
                         var parentDiv = video.parentElement;
+                        if (pinnedVideo === parentDiv) {
+                            console.log("LALALALAALLALALA")
+                            selectCam(parentDiv)()
+                        }
                         video.parentElement.parentElement.removeChild(parentDiv);
                         let src = '/off.mp3';
                         let audio = new Audio(src);
@@ -237,14 +252,6 @@ function pageReady() {
                         delete connections[id]
                         updateCSS()
                     });
-                    socket.on('fullscreen', function (id) {
-                        var video = document.querySelector('[data-socket="' + id + '"]');
-                        if (video) {
-                            var parentDiv = video.parentElement;
-                            parentDiv.classList.add("fullscreen");
-                        }
-
-                    })
 
                     socket.on("video-status-changed", data => {
 
@@ -321,6 +328,8 @@ function getUserMediaSuccess(stream) {
     } catch (error) {
         localVideo.src = window.URL.createObjectURL(stream);
     }
+    let localVideoElement = document.querySelector(".local-video")
+    localVideoElement.onclick = selectCam(localVideoElement)
     updateCSS()
 }
 
@@ -340,6 +349,7 @@ function gotRemoteStream(event, id) {
     div.classList.add("video")
 
     video.setAttribute('data-socket', id);
+    div.onclick = selectCam(div)
     try {
         video.srcObject = event.stream;
     } catch (error) {
@@ -389,6 +399,11 @@ function updateCSS() {
     let countCam = Object.keys(connections).length > 0 ? Object.keys(connections).length : 1
     let divider = 1;
 
+    if (pinnedVideo !== null) {
+        countCam--
+    }
+
+
     while (countCam > divider * divider) {
         divider++;
     }
@@ -398,8 +413,41 @@ function updateCSS() {
         rowDivider = 1
     }
 
+    if (container.clientHeight > container.clientWidth) {
+        // We swap the variables if the height is greater than the width for a better display
+        [divider, rowDivider] = [rowDivider, divider]
+    }
+
     container.style.gridTemplateColumns="repeat("+divider+",1fr)"
     container.style.gridTemplateRows="repeat("+rowDivider+",1fr)"
+}
+
+function selectCam(el){
+    return () => {
+        // We don't want to pin the webcam if you are alone in the call
+        if (Object.keys(connections).length < 2) return
+
+        let container = document.querySelector(".videos")
+        let primary = document.querySelector("#pinned-video")
+
+        if (pinnedVideo !== null) {
+            container.appendChild(pinnedVideo)
+        }
+
+        if (pinnedVideo !== el) {
+            pinnedVideo = el
+            primary.style.display = "block"
+            container.classList.add("reduced");
+            primary.appendChild(pinnedVideo)
+            updateCSS()
+            return
+        }
+
+        primary.style.display = "none"
+        container.classList.remove("reduced")
+        pinnedVideo = null
+        updateCSS()
+    }
 }
 
 function htmlToElement(html) {
