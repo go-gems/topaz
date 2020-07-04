@@ -72,7 +72,6 @@ function toggleParameters() {
     let parametersModal = document.querySelector("#parameters-modal")
     parametersModal.style.display = showParameters ? "none" : "block"
     showParameters = !showParameters
-    console.log(showParameters)
 }
 
 function shareScreen() {
@@ -242,7 +241,6 @@ function pageReady() {
                         var video = document.querySelector('[data-socket="' + id + '"]');
                         var parentDiv = video.parentElement;
                         if (pinnedVideo === parentDiv) {
-                            console.log("LALALALAALLALALA")
                             selectCam(parentDiv)()
                         }
                         video.parentElement.parentElement.removeChild(parentDiv);
