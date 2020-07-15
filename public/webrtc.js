@@ -10,8 +10,11 @@ let showParameters = false
 let pinnedVideo = null
 let videoEnabled = true
 let audioEnabled = true
+let showChat = false
 let cameraId = null
 let microphoneId = null
+let username = "Username"
+let defaultUsername = ""
 let peerConnectionConfig = {
     'iceServers': [
         {'urls': 'stun:stun.services.mozilla.com'},
@@ -70,10 +73,33 @@ function toggleVideo() {
     button.classList.remove("fa-video");
 }
 
+function toggleChat() {
+    let chatPanel = document.querySelector(".chat-panel")
+    showChat ? chatPanel.classList.remove("open") : chatPanel.classList.add("open");
+    showChat = !showChat
+
+}
+
 function toggleParameters() {
     let parametersModal = document.querySelector("#parameters-modal")
     parametersModal.style.display = showParameters ? "none" : "block"
     showParameters = !showParameters
+}
+
+function sendMessage(event) {
+    let textarea = document.querySelector(".chat-box textarea")
+    if (
+        event instanceof MouseEvent || (
+            event instanceof KeyboardEvent &&
+            event.ctrlKey == true &&
+            event.key == "Enter"
+        )
+    ) {
+        socket.emit('message', {username: username, message: textarea.value});
+
+        textarea.value = ""
+        textarea.focus();
+    }
 }
 
 function shareScreen() {
@@ -215,11 +241,49 @@ function appendAvatar(avatar, container, addon) {
     div.classList.add("avatar")
     div.firstChild.setAttribute("color", avatar.color)
     let legend = document.createElement("p")
-    let add = addon ? "("+addon+")":"";
+    let add = addon ? "(" + addon + ")" : "";
     legend.innerHTML = `${avatar.color} ${avatar.avatar} ${add}`
     legend.style.color = avatar.color;
     div.appendChild(legend)
     container.appendChild(div);
+}
+
+function toggleEditUsername() {
+    let chatusername = document.querySelector(".chat-username");
+    document.querySelector(".chat-username input").value = username
+    chatusername.classList.add("edit")
+}
+
+function updateUsername(element, event) {
+    if (event.key == "Enter") {
+        let chatusername = document.querySelector(".chat-username");
+        chatusername.classList.remove("edit")
+        username = element.value
+        if (element.value) {
+            localStorage.setItem("username", username);
+        } else {
+            username = defaultUsername
+        }
+        document.querySelector(".readonly-name").innerHTML = username
+    } else if (event.key == "Escape") {
+        console.log(event)
+        chatusername.classList.remove("edit")
+
+    }
+}
+
+function appendMessage(avatar, username, message) {
+    let replaced = message.replace("\n", "<br/>");
+    let chatbox = document.querySelector(".chat-content");
+    chatbox.innerHTML = (chatbox.innerHTML || "") + `
+    <div class="message">
+        <div class="message-avatar" style="color: ${avatar.color}">${avatar.image}</div>
+        <div class="message-body">
+            <div class="message-author">${username}</div>
+            <div class="message-content">${replaced}</div>
+        </div>
+    </div>
+    `
 }
 
 function pageReady() {
@@ -242,16 +306,21 @@ function pageReady() {
 
                 socket = io.connect(config.host, {secure: true});
                 socket.on('signal', gotMessageFromServer);
-                socket.on('broadcast-message', function (id, data) {
-                    // MESSAGE HERE FROM USER
-                    //   var video = document.querySelector('[data-socket="' + id + '"]');
-
+                socket.on('message', function (id, avatar, data) {
+                    appendMessage(avatar, data.username, data.message)
                 })
+
                 socket.on('connect', function () {
                     socketId = socket.id;
                     socket.on("avatar", function (avatar) {
+                        defaultUsername = avatar.color + " " + avatar.avatar
+                        username = defaultUsername
+                        username = localStorage.getItem("username") || username;
+
+                        document.querySelector(".readonly-name").innerHTML = username
+
                         let div = document.querySelector(".local-video")
-                        appendAvatar(avatar, div,"you")
+                        appendAvatar(avatar, div, "you")
                     })
                     socket.on('user-left', function (id) {
                         var video = document.querySelector('[data-socket="' + id + '"]');

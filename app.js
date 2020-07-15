@@ -1,7 +1,7 @@
 var express = require('express')
 
 var app = module.exports = express.createServer();
-
+const chat = require('./chat.js');
 var io = require('socket.io')(app);
 const assets = require('./avatars')
 const AVATAR_IMAGE = assets.icons
@@ -26,7 +26,9 @@ io.on('connection', function (socket) {
     });
 
     socket.on("message", function (data) {
-        io.sockets.emit("broadcast-message", socket.id, data, userProfile);
+        console.log(data)
+        chat.storeMessage(data.username, avatars[socket.id], data.message)
+        io.sockets.emit("message", socket.id,  avatars[socket.id],data);
     })
 
     socket.on("sound-status-changed", status => {
