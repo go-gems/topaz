@@ -1,6 +1,4 @@
 let localVideo;
-let firstPerson = false;
-let socketCount = 0;
 let devmode = true;
 let socketId;
 let localStream;
@@ -20,6 +18,7 @@ let peerConnectionConfig = {
         {'urls': 'stun:stun.l.google.com:19302'},
     ]
 };
+
 
 function _startScreenCapture() {
     if (navigator.getDisplayMedia) {
@@ -62,8 +61,11 @@ function toggleVideo() {
     if (videoEnabled) {
         button.classList.add("fa-video");
         button.classList.remove("fa-video-slash");
+        document.querySelector(".local-video").classList.remove("disabled");
         return
     }
+    document.querySelector(".local-video").classList.add("disabled")
+
     button.classList.add("fa-video-slash");
     button.classList.remove("fa-video");
 }
@@ -79,8 +81,8 @@ function shareScreen() {
         .then(getScreenMediaSuccess)
         .then(function () {
             console.log("PIF", connections)
-            for(connection of connections){
-                console.log("PAF",connection)
+            for (connection of connections) {
+                console.log("PAF", connection)
             }
             connections.forEach(function (pc) {
                 console.log("PAF")
@@ -207,6 +209,19 @@ async function loadDevices() {
     }
 }
 
+function appendAvatar(avatar, container, addon) {
+    let div = document.createElement('div');
+    div.innerHTML = avatar.image.trim();
+    div.classList.add("avatar")
+    div.firstChild.setAttribute("color", avatar.color)
+    let legend = document.createElement("p")
+    let add = addon ? "("+addon+")":"";
+    legend.innerHTML = `${avatar.color} ${avatar.avatar} ${add}`
+    legend.style.color = avatar.color;
+    div.appendChild(legend)
+    container.appendChild(div);
+}
+
 function pageReady() {
 
     localVideo = document.getElementById('localVideo');
@@ -228,15 +243,16 @@ function pageReady() {
                 socket = io.connect(config.host, {secure: true});
                 socket.on('signal', gotMessageFromServer);
                 socket.on('broadcast-message', function (id, data) {
+                    // MESSAGE HERE FROM USER
+                    //   var video = document.querySelector('[data-socket="' + id + '"]');
 
-                    var video = document.querySelector('[data-socket="' + id + '"]');
-                    //if(data.mode && data.mode=="fullscreen")
-                    //video.classList.add("fullscreen");
                 })
                 socket.on('connect', function () {
-
                     socketId = socket.id;
-
+                    socket.on("avatar", function (avatar) {
+                        let div = document.querySelector(".local-video")
+                        appendAvatar(avatar, div,"you")
+                    })
                     socket.on('user-left', function (id) {
                         var video = document.querySelector('[data-socket="' + id + '"]');
                         var parentDiv = video.parentElement;
@@ -257,6 +273,7 @@ function pageReady() {
                         if (video) {
                             let indicator = video.parentElement.querySelector(".remote-video-status")
                             data.status ? indicator.classList.remove("status-disabled") : indicator.classList.add("status-disabled")
+                            data.status ? video.parentElement.classList.remove("disabled") : video.parentElement.classList.add("disabled")
                         }
                     })
 
@@ -269,7 +286,7 @@ function pageReady() {
                         }
                     })
 
-                    socket.on('user-joined', function (id, count, clients) {
+                    socket.on('user-joined', function (id, count, clients, avatars) {
                         let src = '/on.mp3';
                         let audio = new Audio(src);
                         audio.play();
@@ -287,7 +304,7 @@ function pageReady() {
                                 //Wait for their video stream
                                 connections[socketListId].onaddstream = function (event) {
                                     console.log("adding stream event")
-                                    gotRemoteStream(event, socketListId)
+                                    gotRemoteStream(event, socketListId, avatars)
                                 }
 
                                 //Add the local video stream
@@ -331,7 +348,7 @@ function getUserMediaSuccess(stream) {
     updateCSS()
 }
 
-function gotRemoteStream(event, id) {
+function gotRemoteStream(event, id, avatars) {
 
     let video = document.createElement('video'),
 
@@ -345,7 +362,10 @@ function gotRemoteStream(event, id) {
 
     div.classList.add("remote-video")
     div.classList.add("video")
-
+    if (avatars[id]) {
+        let avatar = document.createElement('i')
+        appendAvatar(avatars[id], div)
+    }
     video.setAttribute('data-socket', id);
     div.onclick = selectCam(div)
     try {
@@ -366,7 +386,8 @@ function gotRemoteStream(event, id) {
 }
 
 function gotMessageFromServer(fromId, message) {
-
+    socket.emit("video-status-changed", videoEnabled)
+    socket.emit("sound-status-changed", audioEnabled)
     //Parse the incoming signal
     var signal = JSON.parse(message)
 
@@ -416,11 +437,11 @@ function updateCSS() {
         [divider, rowDivider] = [rowDivider, divider]
     }
 
-    container.style.gridTemplateColumns="repeat("+divider+",1fr)"
-    container.style.gridTemplateRows="repeat("+rowDivider+",1fr)"
+    container.style.gridTemplateColumns = "repeat(" + divider + ",1fr)"
+    container.style.gridTemplateRows = "repeat(" + rowDivider + ",1fr)"
 }
 
-function selectCam(el){
+function selectCam(el) {
     return () => {
         // We don't want to pin the webcam if you are alone in the call
         if (Object.keys(connections).length < 2) return
