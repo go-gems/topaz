@@ -1,18 +1,174 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap');
 
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-button {
+    width: 0px;
+    height: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #525252;
+    border: 0px solid #ffffff;
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #383838;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: #000000;
+}
+
+::-webkit-scrollbar-track {
+    background: #ffffff;
+    border: 0px none #ffffff;
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-track:hover {
+    background: #999999;
+}
+
+::-webkit-scrollbar-track:active {
+    background: #333333;
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 body {
     margin: 0;
     overflow: hidden;
     font-family: Roboto, sans-serif;
 }
 
+.base-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.container {
+    display: flex;
+    height: calc(100vh - 50px);
+
+}
+
 .videos {
 
     background-color: rgb(41, 41, 41);
     width: 100vw;
-    height: calc(100vh - 50px);
+    height: 100%;
     display: grid;
     float: left;
+}
+
+.message {
+    margin-bottom: 32px;
+    display: flex;
+
+    align-items: flex-start;
+}
+
+.message-content {
+    font-size: 13px;
+}
+
+message-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.message-author {
+    font-weight: bolder;
+}
+.chat-username.edit>div{
+display: none;
+}
+
+.chat-username input{
+    display: none;
+}
+
+.chat-username.edit input{
+    display: block;
+}
+.message-avatar {
+    background-color: rgb(30, 30, 30);
+    border-radius: 100px;
+    padding: 5px;
+    margin-right: 10px;
+}
+
+.message-avatar svg {
+    width: 42px;
+    height: 42px;
+
+}
+
+.chat-panel {
+    width: 0px;
+    display: none;
+    font-family: arial, sans-serif;
+    height: calc(100% - 50px);
+}
+
+.chat-panel.open {
+    width: 350px !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-panel .chat-content {
+    flex-grow: 1;
+    overflow: auto;
+    padding: 10px;
+    color: black;
+}
+
+.chat-panel .chat-box {
+    height: 100px;
+    display: flex;
+    justify-content: center;
+}
+
+.chat-panel .chat-box textarea {
+    height: 100%;
+    resize: none;
+    flex-grow: 1;
+    padding: 10px;
+}
+
+#chat-button {
+    cursor: pointer;
+}
+
+#send-message-button {
+    cursor: pointer;
+    margin-top: 30px;
+    margin-right: 10px;
+}
+
+.chat-username {
+    margin-left: 5px;
+    margin-bottom: 5px;
+}
+
+#chat-textarea {
+    border: none;
+    border-radius: 20px;
+    margin: 10px;
+    background-color: rgba(200, 200, 200, 0.2);
+}
+
+#chat-textarea:focus {
+    outline: none;
 }
 
 video {
@@ -29,21 +185,47 @@ video {
     background-color: rgb(30, 30, 30);
 }
 
+.video.disabled video {
+    display: none;
+}
+
+.video .avatar {
+    display: none;
+
+}
+
+
+.video.disabled .avatar {
+    height: 100%;
+    width: 100%;
+    display: flex; /* new */
+    align-items: center; /* new */
+    justify-content: center; /* new */
+    flex-direction: column;
+}
+
+.avatar svg {
+    width: 40%;
+}
+
+.avatar p {
+    font-weight: 700;
+}
 
 .local-video, .remote-video {
     position: relative;
 }
 
-#pinned-video{
+#pinned-video {
     width: 70vw;
     height: 100vh;
     display: none;
-    float:left;
+    float: left;
     background-color: rgb(30, 30, 30);
 
 }
 
-.reduced{
+.reduced {
     width: 30vw;
 }
 
@@ -70,7 +252,9 @@ video {
     display: flex;
     justify-content: space-between;
     width: 70px;
+    margin: auto
 }
+
 .remote-input-status {
     flex: 1 1 auto;
     width: 50%;
@@ -100,17 +284,38 @@ video {
 }
 
 #bottom-bar {
-    position: absolute;
-    bottom: 0;
-    z-index: 10;
+    flex: auto 1 1;
     background-color: white;
     height: 50px;
     width: 100vw;
-    display: flex;
     justify-content: center;
     align-items: center;
     font-size: large;
+    display: flex;
 }
+
+#bottom-bar > * {
+    flex: auto 1 1;
+}
+
+#bottom-bar .center {
+    text-align: center;
+}
+
+#bottom-bar .right {
+    text-align: right;
+}
+
+.right .controls {
+    float: right;
+    margin-right: 10px;
+}
+
+.left .controls {
+    float: left;
+    margin-left: 10px;
+}
+
 
 #parameters-modal {
     display: none;
@@ -122,7 +327,7 @@ video {
     background-color: white;
     height: 220px;
     width: 300px;
-    box-shadow: 0 0 20px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 0 20px 15px rgba(0, 0, 0, 0.1);
     border-radius: 5px;
 }
 
@@ -137,12 +342,10 @@ video {
     cursor: pointer;
 }
 
+
 #parameters-button {
     cursor: pointer;
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
+    margin-left: auto;
 }
 
 .input-selection-wrapper {

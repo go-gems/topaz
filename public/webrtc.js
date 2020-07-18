@@ -1,6 +1,4 @@
 let localVideo;
-let firstPerson = false;
-let socketCount = 0;
 let devmode = true;
 let socketId;
 let localStream;
@@ -12,14 +10,18 @@ let showParameters = false
 let pinnedVideo = null
 let videoEnabled = true
 let audioEnabled = true
+let showChat = false
 let cameraId = null
 let microphoneId = null
+let username = "Username"
+let defaultUsername = ""
 let peerConnectionConfig = {
     'iceServers': [
         {'urls': 'stun:stun.services.mozilla.com'},
         {'urls': 'stun:stun.l.google.com:19302'},
     ]
 };
+
 
 function _startScreenCapture() {
     if (navigator.getDisplayMedia) {
@@ -62,10 +64,20 @@ function toggleVideo() {
     if (videoEnabled) {
         button.classList.add("fa-video");
         button.classList.remove("fa-video-slash");
+        document.querySelector(".local-video").classList.remove("disabled");
         return
     }
+    document.querySelector(".local-video").classList.add("disabled")
+
     button.classList.add("fa-video-slash");
     button.classList.remove("fa-video");
+}
+
+function toggleChat() {
+    let chatPanel = document.querySelector(".chat-panel")
+    showChat ? chatPanel.classList.remove("open") : chatPanel.classList.add("open");
+    showChat = !showChat
+
 }
 
 function toggleParameters() {
@@ -74,13 +86,35 @@ function toggleParameters() {
     showParameters = !showParameters
 }
 
+function sendMessage(event) {
+    let textarea = document.querySelector(".chat-box textarea")
+    if (
+        event instanceof MouseEvent || (
+            event instanceof KeyboardEvent &&
+            !event.ctrlKey &&
+            !event.shiftKey &&
+            event.key === "Enter"
+        )
+    ) {
+        event.preventDefault()
+        socket.emit('message', {username: username, message: textarea.value})
+
+        textarea.value = ""
+        textarea.focus()
+        return
+    }
+    if (event.ctrlKey && event.key === "Enter") {
+        textarea.value += "\n"
+    }
+}
+
 function shareScreen() {
     _startScreenCapture()
         .then(getScreenMediaSuccess)
         .then(function () {
             console.log("PIF", connections)
-            for(connection of connections){
-                console.log("PAF",connection)
+            for (connection of connections) {
+                console.log("PAF", connection)
             }
             connections.forEach(function (pc) {
                 console.log("PAF")
@@ -207,6 +241,58 @@ async function loadDevices() {
     }
 }
 
+function appendAvatar(avatar, container, addon) {
+    let div = document.createElement('div');
+    div.innerHTML = avatar.image.trim();
+    div.classList.add("avatar")
+    div.firstChild.setAttribute("color", avatar.color)
+    let legend = document.createElement("p")
+    let add = addon ? "(" + addon + ")" : "";
+    legend.innerHTML = `${avatar.color} ${avatar.avatar} ${add}`
+    legend.style.color = avatar.color;
+    div.appendChild(legend)
+    container.appendChild(div);
+}
+
+function toggleEditUsername() {
+    let chatusername = document.querySelector(".chat-username");
+    document.querySelector(".chat-username input").value = username
+    chatusername.classList.add("edit")
+}
+
+function updateUsername(element, event) {
+    if (event.key == "Enter") {
+        let chatusername = document.querySelector(".chat-username");
+        chatusername.classList.remove("edit")
+        username = element.value
+        if (element.value) {
+            localStorage.setItem("username", username);
+        } else {
+            username = defaultUsername
+        }
+        document.querySelector(".readonly-name").innerHTML = username
+    } else if (event.key == "Escape") {
+        console.log(event)
+        chatusername.classList.remove("edit")
+
+    }
+}
+
+function appendMessage(avatar, username, message) {
+    let replaced = message.replace("\n", "<br/>");
+    let chatbox = document.querySelector(".chat-content");
+    chatbox.innerHTML = (chatbox.innerHTML || "") + `
+    <div class="message">
+        <div class="message-avatar" style="color: ${avatar.color}">${avatar.image}</div>
+        <div class="message-body">
+            <div class="message-author">${username}</div>
+            <div class="message-content">${replaced}</div>
+        </div>
+    </div>
+    `
+    chatbox.scrollTop = chatbox.scrollHeight
+}
+
 function pageReady() {
 
     localVideo = document.getElementById('localVideo');
@@ -227,16 +313,22 @@ function pageReady() {
 
                 socket = io.connect(config.host, {secure: true});
                 socket.on('signal', gotMessageFromServer);
-                socket.on('broadcast-message', function (id, data) {
-
-                    var video = document.querySelector('[data-socket="' + id + '"]');
-                    //if(data.mode && data.mode=="fullscreen")
-                    //video.classList.add("fullscreen");
+                socket.on('message', function (id, avatar, data) {
+                    appendMessage(avatar, data.username, data.message)
                 })
+
                 socket.on('connect', function () {
-
                     socketId = socket.id;
+                    socket.on("avatar", function (avatar) {
+                        defaultUsername = avatar.color + " " + avatar.avatar
+                        username = defaultUsername
+                        username = localStorage.getItem("username") || username;
 
+                        document.querySelector(".readonly-name").innerHTML = username
+
+                        let div = document.querySelector(".local-video")
+                        appendAvatar(avatar, div, "you")
+                    })
                     socket.on('user-left', function (id) {
                         var video = document.querySelector('[data-socket="' + id + '"]');
                         var parentDiv = video.parentElement;
@@ -257,6 +349,7 @@ function pageReady() {
                         if (video) {
                             let indicator = video.parentElement.querySelector(".remote-video-status")
                             data.status ? indicator.classList.remove("status-disabled") : indicator.classList.add("status-disabled")
+                            data.status ? video.parentElement.classList.remove("disabled") : video.parentElement.classList.add("disabled")
                         }
                     })
 
@@ -269,7 +362,7 @@ function pageReady() {
                         }
                     })
 
-                    socket.on('user-joined', function (id, count, clients) {
+                    socket.on('user-joined', function (id, count, clients, avatars) {
                         let src = '/on.mp3';
                         let audio = new Audio(src);
                         audio.play();
@@ -287,7 +380,7 @@ function pageReady() {
                                 //Wait for their video stream
                                 connections[socketListId].onaddstream = function (event) {
                                     console.log("adding stream event")
-                                    gotRemoteStream(event, socketListId)
+                                    gotRemoteStream(event, socketListId, avatars)
                                 }
 
                                 //Add the local video stream
@@ -331,7 +424,7 @@ function getUserMediaSuccess(stream) {
     updateCSS()
 }
 
-function gotRemoteStream(event, id) {
+function gotRemoteStream(event, id, avatars) {
 
     let video = document.createElement('video'),
 
@@ -345,7 +438,10 @@ function gotRemoteStream(event, id) {
 
     div.classList.add("remote-video")
     div.classList.add("video")
-
+    if (avatars[id]) {
+        let avatar = document.createElement('i')
+        appendAvatar(avatars[id], div)
+    }
     video.setAttribute('data-socket', id);
     div.onclick = selectCam(div)
     try {
@@ -366,7 +462,8 @@ function gotRemoteStream(event, id) {
 }
 
 function gotMessageFromServer(fromId, message) {
-
+    socket.emit("video-status-changed", videoEnabled)
+    socket.emit("sound-status-changed", audioEnabled)
     //Parse the incoming signal
     var signal = JSON.parse(message)
 
@@ -416,11 +513,11 @@ function updateCSS() {
         [divider, rowDivider] = [rowDivider, divider]
     }
 
-    container.style.gridTemplateColumns="repeat("+divider+",1fr)"
-    container.style.gridTemplateRows="repeat("+rowDivider+",1fr)"
+    container.style.gridTemplateColumns = "repeat(" + divider + ",1fr)"
+    container.style.gridTemplateRows = "repeat(" + rowDivider + ",1fr)"
 }
 
-function selectCam(el){
+function selectCam(el) {
     return () => {
         // We don't want to pin the webcam if you are alone in the call
         if (Object.keys(connections).length < 2) return

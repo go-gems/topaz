@@ -66,9 +66,7 @@ function pageReady() {
 
                                 //Add the local video stream
                                 connections[socketListId].addStream(localStream);   
-                                setTimeout(()=>{
-                                    socket.emit('fullscreen',socketId)
-                                }, 400)
+
                             }
                         });
 
