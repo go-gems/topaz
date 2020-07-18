@@ -23,9 +23,9 @@
             </div>
             <div class="chat-box">
 
-                <textarea onkeydown="sendMessage(event,this)" autofocus
+                <textarea id="chat-textarea" onkeydown="sendMessage(event)" autofocus
                           placeholder="Press enter to send a message"></textarea>
-                <div onclick="sendMessage(event)">
+                <div id="send-message-button" onclick="sendMessage(event)">
                     <i class="fas fa-paper-plane"></i>
                 </div>
             </div>

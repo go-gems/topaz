@@ -116,7 +116,7 @@ display: none;
     width: 0px;
     display: none;
     font-family: arial, sans-serif;
-
+    height: calc(100% - 50px);
 }
 
 .chat-panel.open {
@@ -136,16 +136,40 @@ display: none;
     height: 100px;
     display: flex;
     justify-content: center;
-
-
 }
 
 .chat-panel .chat-box textarea {
     height: 100%;
     resize: none;
     flex-grow: 1;
+    padding: 10px;
 }
 
+#chat-button {
+    cursor: pointer;
+}
+
+#send-message-button {
+    cursor: pointer;
+    margin-top: 30px;
+    margin-right: 10px;
+}
+
+.chat-username {
+    margin-left: 5px;
+    margin-bottom: 5px;
+}
+
+#chat-textarea {
+    border: none;
+    border-radius: 20px;
+    margin: 10px;
+    background-color: rgba(200, 200, 200, 0.2);
+}
+
+#chat-textarea:focus {
+    outline: none;
+}
 
 video {
     display: block;

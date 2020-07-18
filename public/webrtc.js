@@ -91,14 +91,20 @@ function sendMessage(event) {
     if (
         event instanceof MouseEvent || (
             event instanceof KeyboardEvent &&
-            event.ctrlKey == true &&
-            event.key == "Enter"
+            !event.ctrlKey &&
+            !event.shiftKey &&
+            event.key === "Enter"
         )
     ) {
-        socket.emit('message', {username: username, message: textarea.value});
+        event.preventDefault()
+        socket.emit('message', {username: username, message: textarea.value})
 
         textarea.value = ""
-        textarea.focus();
+        textarea.focus()
+        return
+    }
+    if (event.ctrlKey && event.key === "Enter") {
+        textarea.value += "\n"
     }
 }
 
@@ -284,6 +290,7 @@ function appendMessage(avatar, username, message) {
         </div>
     </div>
     `
+    chatbox.scrollTop = chatbox.scrollHeight
 }
 
 function pageReady() {
