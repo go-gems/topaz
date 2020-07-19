@@ -279,11 +279,8 @@ function updateUsername(element, event) {
 }
 
 function appendMessage(avatar, username, message) {
-    let replaced = message.replace("\n", "<br/>");
+    let replaced = transformContainingURL(message.replace("\n", "<br/>"));
     let chatbox = document.querySelector(".chat-content");
-    if (isUrl(replaced)){
-        replaced = `<a href='${replaced}' target="_blank">${replaced}</a>`
-    }
     chatbox.innerHTML = (chatbox.innerHTML || "") + `
     <div class="message">
         <div class="message-avatar" style="color: ${avatar.color}">${avatar.image}</div>
@@ -296,9 +293,13 @@ function appendMessage(avatar, username, message) {
     chatbox.scrollTop = chatbox.scrollHeight
 }
 
-function isUrl(message) {
-    let regexp = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
-    return regexp.test(message);
+function transformContainingURL(message) {
+    let regex = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/g
+    let found = [...message.matchAll(regex)]
+    for(const url of found) {
+      message = message.replace(url[0], `<a href='${url[0]}' target="_blank">${url[0]}</a>`)
+    }
+    return message
 }
 
 function pageReady() {
