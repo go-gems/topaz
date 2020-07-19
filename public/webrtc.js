@@ -294,12 +294,8 @@ function appendMessage(avatar, username, message) {
 }
 
 function transformContainingURL(message) {
-    let regex = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/g
-    let found = [...message.matchAll(regex)]
-    for(const url of found) {
-      message = message.replace(url[0], `<a href='${url[0]}' target="_blank">${url[0]}</a>`)
-    }
-    return message
+    let regex = /((http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?)/g
+    return message.replace(regex, `<a href='$1' target="_blank">$1</a>`)
 }
 
 function pageReady() {
