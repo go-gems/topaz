@@ -1,5 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const plugins = require('./plugins/_plugins.js')
+
 let pluginList = [];
 let pluginConfig = JSON.parse(require('fs').readFileSync('config.json'))["plugins"];
 
@@ -55,17 +56,19 @@ module.exports = {
         });
 
     },
+
     async processMessage(author, avatar, message) {
         let item = formatResponse(author, avatar, message)
         for (let plugin of pluginList) {
             if (plugin.supports && plugin.supports(author, avatar, message)) {
                 item = await plugin.transform(author, avatar, message)
-                console.log(item)
                 author = item.author
                 avatar = item.avatar
                 message = item.message
+                item.transformed = true
             }
         }
+        item.message = (new (require('showdown').Converter)()).makeHtml(item.message)
         return item
     },
 

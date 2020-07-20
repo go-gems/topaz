@@ -14,7 +14,7 @@ module.exports = function (config, formatResponse) {
 
             let response = await getJSON(url);
             let result = response.data[Math.floor(Math.random() * response.data.length)]
-            return formatResponse(username, avatar, `${message}<br/><img style="width:100%" src="${result.images.original.url}"/>`)
+            return formatResponse(username, avatar, `${message}\n![](${result.images.original.url})`)
         },
     };
 };

@@ -5,7 +5,6 @@ module.exports = function (config, formatResponse) {
         },
         transform(username, avatar, message) {
             message = message.replace("/rot13 ", "")
-            avatar.image = "";
             return formatResponse(username, avatar, rot13(message))
         },
     };

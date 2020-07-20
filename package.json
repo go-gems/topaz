@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "express": "2.5.8",
+    "showdown": "^1.9.1",
     "sqlite3": "^5.0.0"
   },
   "devDependencies": {

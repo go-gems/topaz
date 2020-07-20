@@ -26,10 +26,11 @@ io.on('connection', function (socket) {
     });
 
     socket.on("message", async function (data) {
-        console.log(data)
+        chat.storeMessage(data.username, avatars[socket.id], data.message)
         let processed = await chat.processMessage(data.username, avatars[socket.id], data.message)
-        console.log(processed)
-        chat.storeMessage(processed.author, processed.avatar, processed.message)
+
+        if (processed.transformed) chat.storeMessage(processed.author, processed.avatar, processed.message)
+
         io.sockets.emit("message", socket.id, processed.avatar, {
             username: processed.author,
             message: processed.message

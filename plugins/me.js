@@ -7,7 +7,7 @@ module.exports = function (config, formatResponse) {
         transform(username, avatar, message) {
             message = message.replace("/me ", "")
             avatar.image = "";
-            return formatResponse("", avatar, "<b>" + username + " " + message + "</b>")
+            return formatResponse("", avatar, `**${username} ${message}**`)
         },
     };
 };
