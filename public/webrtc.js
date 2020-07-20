@@ -279,7 +279,7 @@ function updateUsername(element, event) {
 }
 
 function appendMessage(avatar, username, message) {
-    let replaced = message.replace("\n", "<br/>");
+    let replaced = transformContainingURL(message.replace("\n", "<br/>"));
     let chatbox = document.querySelector(".chat-content");
     chatbox.innerHTML = (chatbox.innerHTML || "") + `
     <div class="message">
@@ -291,6 +291,11 @@ function appendMessage(avatar, username, message) {
     </div>
     `
     chatbox.scrollTop = chatbox.scrollHeight
+}
+
+function transformContainingURL(message) {
+    let regex = /((http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?)/g
+    return message.replace(regex, `<a href='$1' target="_blank">$1</a>`)
 }
 
 function pageReady() {
