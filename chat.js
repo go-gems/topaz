@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const plugins = require('./plugins/_plugins.js')
 let pluginList = [];
-
+let pluginConfig = JSON.parse(require('fs').readFileSync('config.json'))["plugins"];
 
 function formatResponse(author, avatar, message) {
     return {
@@ -11,8 +11,9 @@ function formatResponse(author, avatar, message) {
     }
 }
 
-for (let plugin of plugins) {
-    pluginList.push(require(plugin)(formatResponse))
+for (let pluginName in plugins) {
+    let config = pluginConfig[pluginName] || {}
+    pluginList.push(require(plugins[pluginName])(config, formatResponse))
 }
 let db = new sqlite3.Database('database.sqlite', (err) => {
     if (err) {

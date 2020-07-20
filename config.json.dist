@@ -1,0 +1,7 @@
+{
+  "plugins": {
+    "giphy": {
+      "api_key": "GIPHY API KEY"
+    }
+  }
+}

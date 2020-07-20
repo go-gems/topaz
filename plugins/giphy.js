@@ -1,7 +1,6 @@
-//https://api.giphy.com/v1/gifs/search?api_key=SgFeimn4Izjb7D8AqSaoKxu3CDzLsq7q&q=job&limit=10&offset=0&rating=g&lang=en
 const https = require('https');
 
-module.exports = function (formatResponse) {
+module.exports = function (config, formatResponse) {
     return {
         supports(username, avatar, message) {
             console.log(message)
@@ -11,7 +10,7 @@ module.exports = function (formatResponse) {
 
             keyword = message.replace("/giphy ", "")
             keyword = encodeURIComponent(keyword)
-            let url = `https://api.giphy.com/v1/gifs/search?api_key=SgFeimn4Izjb7D8AqSaoKxu3CDzLsq7q&q=${keyword}&limit=10&offset=0&rating=g&lang=en`
+            let url = `https://api.giphy.com/v1/gifs/search?api_key=${config.api_key}&q=${keyword}&limit=10&offset=0&rating=g&lang=en`
 
             let response = await getJSON(url);
             let result = response.data[Math.floor(Math.random() * response.data.length)]

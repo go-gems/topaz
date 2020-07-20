@@ -1,5 +1,5 @@
 
-module.exports = function (formatResponse) {
+module.exports = function (config, formatResponse) {
     return {
         supports(username, avatar, message) {
             return (message.startsWith("/me "))
