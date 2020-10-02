@@ -1,5 +1,21 @@
 const sqlite3 = require('sqlite3').verbose();
+const plugins = require('./plugins/_plugins.js')
 
+let pluginList = [];
+let pluginConfig = JSON.parse(require('fs').readFileSync('config.json'))["plugins"];
+
+function formatResponse(author, avatar, message) {
+    return {
+        author: author,
+        avatar: {avatar: avatar.avatar, color: avatar.color, image: avatar.image},
+        message: message,
+    }
+}
+
+for (let pluginName in plugins) {
+    let config = pluginConfig[pluginName] || {}
+    pluginList.push(require(plugins[pluginName])(config, formatResponse))
+}
 let db = new sqlite3.Database('database.sqlite', (err) => {
     if (err) {
         return console.error(err.message);
@@ -16,7 +32,6 @@ db.run(`CREATE TABLE IF NOT EXISTS messages  (
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );`
 );
-
 
 module.exports = {
     storeMessage(author, avatar, message) {
@@ -40,5 +55,21 @@ module.exports = {
             });
         });
 
-    }
+    },
+
+    async processMessage(author, avatar, message) {
+        let item = formatResponse(author, avatar, message)
+        for (let plugin of pluginList) {
+            if (plugin.supports && plugin.supports(author, avatar, message)) {
+                item = await plugin.transform(author, avatar, message)
+                author = item.author
+                avatar = item.avatar
+                message = item.message
+                item.transformed = true
+            }
+        }
+        item.message = (new (require('showdown').Converter)()).makeHtml(item.message)
+        return item
+    },
+
 }

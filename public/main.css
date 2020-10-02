@@ -70,7 +70,6 @@ body {
 }
 
 .message {
-    margin-bottom: 32px;
     display: flex;
 
     align-items: flex-start;
@@ -78,6 +77,10 @@ body {
 
 .message-content {
     font-size: 13px;
+}
+
+.message-content img {
+    width: 100%;
 }
 
 message-body {
@@ -88,25 +91,27 @@ message-body {
 .message-author {
     font-weight: bolder;
 }
-.chat-username.edit>div{
-display: none;
-}
 
-.chat-username input{
+.chat-username.edit > div {
     display: none;
 }
 
-.chat-username.edit input{
+.chat-username input {
+    display: none;
+}
+
+.chat-username.edit input {
     display: block;
 }
+
 .message-avatar {
     background-color: rgb(30, 30, 30);
     border-radius: 100px;
-    padding: 5px;
     margin-right: 10px;
 }
 
 .message-avatar svg {
+    margin: 5px;
     width: 42px;
     height: 42px;
 

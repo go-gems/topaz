@@ -25,10 +25,16 @@ io.on('connection', function (socket) {
 
     });
 
-    socket.on("message", function (data) {
-        console.log(data)
+    socket.on("message", async function (data) {
         chat.storeMessage(data.username, avatars[socket.id], data.message)
-        io.sockets.emit("message", socket.id,  avatars[socket.id],data);
+        let processed = await chat.processMessage(data.username, avatars[socket.id], data.message)
+
+        if (processed.transformed) chat.storeMessage(processed.author, processed.avatar, processed.message)
+
+        io.sockets.emit("message", socket.id, processed.avatar, {
+            username: processed.author,
+            message: processed.message
+        });
     })
 
     socket.on("sound-status-changed", status => {
