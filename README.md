@@ -50,7 +50,7 @@ module.exports = function (config, formatResponse) {
 It can be useful to detect that someone has been quoted, or if the string starts/contains something.
 
 - Transform takes a username, avatar, message and will apply transformation if supports returns true. 
-you can use the formatResponse to return the good format or you can 
+you can use the formatResponse to return the good format or you can do manually using the following syntax:
 ```json
 {
     "author": "username",
