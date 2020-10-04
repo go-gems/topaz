@@ -223,7 +223,6 @@ video {
 
 #pinned-video {
     width: 70vw;
-    height: 100vh;
     display: none;
     float: left;
     background-color: rgb(30, 30, 30);
