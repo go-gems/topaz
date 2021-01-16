@@ -1,5 +1,7 @@
 # Topaz
 
+[![Join the chat at https://gitter.im/decima-topaz/community](https://badges.gitter.im/decima-topaz/community.svg)](https://gitter.im/decima-topaz/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 based on [kolson25/WebRTC-Multi-Peer-Video-Audio](https://github.com/kolson25/WebRTC-Multi-Peer-Video-Audio), this project aims to try webrtc.
 ## Demo
 
