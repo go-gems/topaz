@@ -3,10 +3,14 @@ var express = require('express')
 var app = module.exports = express.createServer();
 const chat = require('./chat.js');
 var io = require('socket.io')(app);
+const { PeerServer } = require('peer')
 const assets = require('./avatars')
 const AVATAR_IMAGE = assets.icons
 const CSS_COLOR_NAMES = assets.colors
 let avatars = {}
+
+const peerServer = PeerServer({port: 8042, path: '/topaz', proxied: true})
+
 io.on('connection', function (socket) {
     let avatar = Object.keys(AVATAR_IMAGE)[Math.floor(Math.random() * Object.keys(AVATAR_IMAGE).length)];
     let color = CSS_COLOR_NAMES[Math.floor(Math.random() * CSS_COLOR_NAMES.length)];
