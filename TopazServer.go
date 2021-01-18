@@ -143,7 +143,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 /**
-This part is about Generating random usernames and colors
+This part is about Generating random usernames
 */
 type wordList []string
 
