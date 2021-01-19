@@ -22,6 +22,324 @@ let peerConnectionConfig = {
     ]
 };
 
+let clients = {}
+
+const wsClient = {
+    socket: null,
+    initialize() {
+
+        this.socket = io(config.host)
+        socketId = this.socket.id
+
+        this.socket.on("initialize", onInitialize)
+        this.socket.on("offer", onOffer)
+        this.socket.on("answer", onAnswer)
+        this.socket.on("ice-candidate", onIceCandidate)
+        this.socket.on("user-joined", onUserJoined)
+        this.socket.on("user-left", onUserLeft)
+        this.socket.on("chat-message", onChatMessage)
+        this.socket.on("video-status-changed", onVideoStatusChanged)
+        this.socket.on("audio-status-changed", onAudioStatusChanged)
+    },
+
+}
+
+const media = {
+    localStream: null,
+    localVideoElement: null,
+    constraints: {
+        video: true,
+        audio: true
+    },
+    async initialize() {
+        if (!await navigator.mediaDevices.getUserMedia) {
+            alert("Your browser does not support the getMediaAPI. Please update your browser.")
+        }
+
+        this.loadDevices()
+
+        this.localVideoElement = document.querySelector("#localVideo")
+        console.log(this)
+
+        try {
+            let stream = await navigator.mediaDevices.getUserMedia(this.constraints)
+            this.handleLocalStream(stream)
+        } catch (err) {
+            console.error("Error while trying to get user stream", err)
+        }
+
+    },
+    handleLocalStream(stream) {
+        console.log(this)
+        this.localStream = stream
+        this.localVideoElement.srcObject = this.localStream
+        let localVideoParentElement = this.localVideoElement.parentElement
+        localVideoParentElement.onclick = selectCam(localVideoParentElement)
+        updateCSS()
+    },
+
+    sendLocalStreamToConnection(connection) {
+        media.localStream.getTracks().forEach(track => {
+            connection.addTrack(track)
+        })
+    },
+    initializeRemoteStream(clientId) {
+
+        // Create the remote stream, used to add tracks later
+        clients[clientId].stream = new MediaStream()
+
+        // Create the HTML elements
+        let video = document.createElement('video')
+        let inputsStatuses = htmlToElement(`
+            <div class="remote-inputs-statuses">
+                <i class="remote-sound-status remote-input-status fas fa-microphone-slash"></i>
+                <i class="remote-video-status remote-input-status fas fa-video-slash"></i>
+            </div>
+        `)
+        let wrapper = document.createElement('div')
+        wrapper.classList.add("remote-video")
+        wrapper.classList.add("video")
+
+        // Adding avatar
+        if (clients[clientId].avatar) {
+            appendAvatar(clients[clientId].avatar, wrapper)
+        }
+
+        video.setAttribute('data-socket', clientId)
+        wrapper.onclick = selectCam(wrapper)
+
+        // Adding the stream to the video element
+        video.srcObject = clients[clientId].stream
+
+        //TODO: Look if this is necessary
+        video.autoplay = true
+        video.muted = devmode == false
+        video.playsinline = true
+
+        // Adding the HTML elements
+        wrapper.appendChild(video);
+        wrapper.appendChild(inputsStatuses)
+        document.querySelector('.videos').appendChild(wrapper);
+        updateCSS()
+
+        // Create the event handler, which will add the tracks that it receive from the client to the stream
+        clients[clientId].connection.ontrack = event => {
+            clients[clientId].stream.addTrack(event.track)
+        }
+    },
+
+    // Loads the list of devices
+    // TODO: Add a listener for changes in the devices :
+    //  https://webrtc.org/getting-started/media-devices#listening_for_devices_changes
+    loadDevices() {
+        navigator.mediaDevices.enumerateDevices()
+            .then(devices => {
+                for (let device of devices) {
+                    switch (device.kind) {
+                        case "audioinput":
+                            document.querySelector("#audioInputDevices").appendChild(
+                                htmlToElement(`<option value="${device.deviceId}">${device.label}</option>`)
+                            )
+                            break;
+                        case "videoinput":
+                            document.querySelector("#videoInputDevices").appendChild(
+                                htmlToElement(`<option value="${device.deviceId}">${device.label}</option>`)
+                            )
+                            break
+                        default:
+                            break
+                    }
+                }
+            })
+
+        document.querySelector("#audioInputDevices").addEventListener("change", e => {
+            microphoneId = e.target.value
+            getStream(videoEnabled)
+                .then(stream => {
+                    replaceStream(stream)
+                })
+        })
+        document.querySelector("#videoInputDevices").addEventListener("change", e => {
+            cameraId = e.target.value
+            getStream(videoEnabled)
+                .then(stream => {
+                    replaceStream(stream)
+                })
+        })
+    }
+}
+
+media.initialize()
+    .then(() => {
+        wsClient.initialize()
+    })
+
+function onInitialize(data) {
+    username = localStorage.getItem("username") || data.avatar.color + " " + data.avatar.avatar;
+
+    document.querySelector(".readonly-name").innerHTML = username
+
+    let div = document.querySelector(".local-video")
+    appendAvatar(data.avatar, div, "you")
+
+    clients = data.clients
+
+    sendOffers(clients)
+}
+
+// Handles an offer by sending an answer to the sender
+async function onOffer(data) {
+    if (!data.offer || !data.sender) {
+        return
+    }
+
+    console.log("received offer", data)
+
+    const connection = new RTCPeerConnection(peerConnectionConfig)
+    await connection.setRemoteDescription(new RTCSessionDescription(data.offer))
+    const answer = await connection.createAnswer()
+    await connection.setLocalDescription(answer)
+
+    clients[data.sender].connection = connection
+
+    setupIceCandidates(data.sender)
+    wsClient.socket.emit("answer", {
+        to: data.sender,
+        answer: answer
+    })
+
+    media.sendLocalStreamToConnection(clients[data.sender].connection)
+
+    media.initializeRemoteStream(data.sender)
+
+}
+
+// Handling the answer returned by a client you offered
+async function onAnswer(data) {
+    console.log(data, clients)
+    if (!data.answer || !clients[data.sender].connection) {
+        return
+    }
+
+    console.log("received answer", data)
+
+    const remoteDescription = new RTCSessionDescription(data.answer)
+    await clients[data.sender].connection.setRemoteDescription(remoteDescription)
+
+    setupIceCandidates(data.sender)
+
+    media.sendLocalStreamToConnection(clients[data.sender].connection)
+
+    media.initializeRemoteStream(data.sender)
+
+}
+
+// Add remote ice candidate to the connection
+function onIceCandidate(data) {
+    if (!data.iceCandidate || !data.sender) {
+        return
+    }
+
+    console.log("received ice", data)
+
+    clients[data.sender].connection.addIceCandidate(data.iceCandidate)
+        .catch(err => {
+            console.warn("Error while trying to add ice candidate", err)
+        })
+}
+
+// Handles a new user joining
+// TODO: Add some client list synchronization logic with the server to avoid
+//  potential desynchronization if we add functionalities later
+function onUserJoined(data) {
+    let src = '/on.mp3'
+    let audio = new Audio(src)
+    audio.play()
+        .catch(err => {
+            console.error("Error while trying to play join sound", err)
+        })
+    clients[data.id] = data.user
+}
+
+function onUserLeft(data) {
+    const video = document.querySelector('[data-socket="' + data.id + '"]');
+    const parentDiv = video.parentElement;
+    if (pinnedVideo === parentDiv) {
+        selectCam(parentDiv)()
+    }
+    video.parentElement.parentElement.removeChild(parentDiv);
+    let src = '/off.mp3'
+    let audio = new Audio(src)
+    audio.play()
+        .catch(err => {
+            console.error("Error while trying to play leave sound", err)
+        })
+    delete clients[data.id]
+    updateCSS()
+}
+
+function onChatMessage(data) {
+    appendMessage(data.sender, data.message)
+}
+
+function onVideoStatusChanged(data) {
+    const video = document.querySelector('[data-socket="' + data.id + '"]');
+    if (video) {
+        let indicator = video.parentElement.querySelector(".remote-video-status")
+        data.status ?
+            indicator.classList.remove("status-disabled") :
+            indicator.classList.add("status-disabled")
+        data.status ?
+            video.parentElement.classList.remove("disabled") :
+            video.parentElement.classList.add("disabled")
+    }
+}
+
+function onAudioStatusChanged(data) {
+    const video = document.querySelector('[data-socket="' + data.id + '"]');
+    if (video) {
+        let indicator = video.parentElement.querySelector(".remote-sound-status")
+        data.status ?
+            indicator.classList.remove("status-disabled") :
+            indicator.classList.add("status-disabled")
+    }
+}
+
+// Send offers to all clients connected (used at the start)
+function sendOffers(clients) {
+    Object.keys(clients).forEach(clientId => {
+        if (clientId === wsClient.socket.id) {
+            return
+        }
+        const connection = new RTCPeerConnection(peerConnectionConfig)
+        connection.createOffer()
+            .then(async offer => {
+                await connection.setLocalDescription(offer)
+                clients[clientId] = {
+                    connection
+                }
+                wsClient.socket.emit("offer", {
+                    to: clientId,
+                    offer
+                })
+            })
+    })
+}
+
+function setupIceCandidates(clientId) {
+    clients[clientId].connection.onicecandidate = function(event) {
+        console.log("ice event", event)
+        if (event.candidate) {
+            wsClient.socket.emit("ice-candidate", {
+                iceCandidate: event.candidate,
+                to: clientId
+            })
+        }
+    }
+
+    console.log("setup ice data", clients[clientId])
+
+}
 
 function _startScreenCapture() {
     if (navigator.getDisplayMedia) {
@@ -55,7 +373,10 @@ function toggleSound() {
 function toggleVideo() {
     let button = document.querySelector("#video-button");
     videoEnabled = !videoEnabled
-    localStream.getVideoTracks()[0].enabled = videoEnabled
+    // localStream.getVideoTracks()[0].enabled = videoEnabled
+    getStream(videoEnabled)
+        .then(replaceStream)
+
 
     if (socket) {
         socket.emit("video-status-changed", videoEnabled)
@@ -108,45 +429,15 @@ function sendMessage(event) {
     }
 }
 
-function shareScreen() {
-    _startScreenCapture()
-        .then(getScreenMediaSuccess)
-        .then(function () {
-            console.log("PIF", connections)
-            for (connection of connections) {
-                console.log("PAF", connection)
-            }
-            connections.forEach(function (pc) {
-                console.log("PAF")
 
-                screenvideotrack = localStream.getVideoTracks()[0]
-                var sender = pc.getSenders().find(function (s) {
-                    return s.track.kind == screenvideotrack.kind;
-                });
-                console.log('found sender:', sender);
-                sender.replaceTrack(screenvideotrack);
-            })
-        })
-}
-
-function shareVideo() {
-    if (navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(getUserMediaSuccess)
-            .then(function () {
-                connections[socketId].replaceTrack(localStream)
-            })
-    }
-}
-
-function getStream() {
+function getStream(enableVideo) {
     return new Promise((resolve, reject) => {
         let constraints = {
-            video: true,
+            video: enableVideo,
             audio: true
         }
 
-        if (cameraId !== null) {
+        if (cameraId !== null && enableVideo) {
             constraints.video = {
                 deviceId: {
                     exact: cameraId
@@ -201,45 +492,7 @@ function replaceStream(stream) {
 }
 
 
-async function loadDevices() {
-    if (await navigator.mediaDevices.getUserMedia({video: true, audio: true})) {
-        navigator.mediaDevices.enumerateDevices()
-            .then(devices => {
-                for (let device of devices) {
-                    switch (device.kind) {
-                        case "audioinput":
-                            document.querySelector("#audioInputDevices").appendChild(
-                                htmlToElement(`<option value="${device.deviceId}">${device.label}</option>`)
-                            )
-                            break;
-                        case "videoinput":
-                            document.querySelector("#videoInputDevices").appendChild(
-                                htmlToElement(`<option value="${device.deviceId}">${device.label}</option>`)
-                            )
-                            break
-                        default:
-                            break
-                    }
-                }
-            })
 
-        document.querySelector("#audioInputDevices").addEventListener("change", e => {
-            microphoneId = e.target.value
-            getStream()
-                .then(stream => {
-                    replaceStream(stream)
-                })
-        })
-        document.querySelector("#videoInputDevices").addEventListener("change", e => {
-            cameraId = e.target.value
-            getStream()
-                .then(stream => {
-                    replaceStream(stream)
-                })
-        })
-
-    }
-}
 
 function appendAvatar(avatar, container, addon) {
     let div = document.createElement('div');
@@ -278,14 +531,15 @@ function updateUsername(element, event) {
     }
 }
 
-function appendMessage(avatar, username, message) {
-    let replaced = transformContainingURL(message.replace("\n", "<br/>"));
-    let chatbox = document.querySelector(".chat-content");
+function appendMessage(id, message) {
+    const replaced = transformContainingURL(message.replace("\n", "<br/>"));
+    const chatbox = document.querySelector(".chat-content");
+    const user = clients[id]
     chatbox.innerHTML = (chatbox.innerHTML || "") + `
     <div class="message">
-        <div class="message-avatar" style="color: ${avatar.color}">${avatar.image}</div>
+        <div class="message-avatar" style="color: ${user.avatar.color}">${user.avatar.image}</div>
         <div class="message-body">
-            <div class="message-author">${username}</div>
+            <div class="message-author">${user.username}</div>
             <div class="message-content">${replaced}</div>
         </div>
     </div>
@@ -298,200 +552,6 @@ function transformContainingURL(message) {
     return message.replace(regex, `<a href='$1' target="_blank">$1</a>`)
 }
 
-function pageReady() {
-
-    localVideo = document.getElementById('localVideo');
-    remoteVideo = document.getElementById('remoteVideo');
-
-    window.onresize = updateCSS
-
-    loadDevices()
-    let constraints = {
-        video: true,
-        audio: true,
-    };
-
-    if (navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(getUserMediaSuccess)
-            .then(function () {
-
-                socket = io.connect(config.host, {secure: true});
-                socket.on('signal', gotMessageFromServer);
-                socket.on('message', function (id, avatar, data) {
-                    appendMessage(avatar, data.username, data.message)
-                })
-
-                socket.on('connect', function () {
-                    socketId = socket.id;
-                    socket.on("avatar", function (avatar) {
-                        defaultUsername = avatar.color + " " + avatar.avatar
-                        username = defaultUsername
-                        username = localStorage.getItem("username") || username;
-
-                        document.querySelector(".readonly-name").innerHTML = username
-
-                        let div = document.querySelector(".local-video")
-                        appendAvatar(avatar, div, "you")
-                    })
-                    socket.on('user-left', function (id) {
-                        var video = document.querySelector('[data-socket="' + id + '"]');
-                        var parentDiv = video.parentElement;
-                        if (pinnedVideo === parentDiv) {
-                            selectCam(parentDiv)()
-                        }
-                        video.parentElement.parentElement.removeChild(parentDiv);
-                        let src = '/off.mp3';
-                        let audio = new Audio(src);
-                        audio.play();
-                        delete connections[id]
-                        updateCSS()
-                    });
-
-                    socket.on("video-status-changed", data => {
-
-                        let video = document.querySelector('[data-socket="' + data.id + '"]');
-                        if (video) {
-                            let indicator = video.parentElement.querySelector(".remote-video-status")
-                            data.status ? indicator.classList.remove("status-disabled") : indicator.classList.add("status-disabled")
-                            data.status ? video.parentElement.classList.remove("disabled") : video.parentElement.classList.add("disabled")
-                        }
-                    })
-
-                    socket.on("sound-status-changed", data => {
-
-                        let video = document.querySelector('[data-socket="' + data.id + '"]');
-                        if (video) {
-                            let indicator = video.parentElement.querySelector(".remote-sound-status")
-                            data.status ? indicator.classList.remove("status-disabled") : indicator.classList.add("status-disabled")
-                        }
-                    })
-
-                    socket.on('user-joined', function (id, count, clients, avatars) {
-                        let src = '/on.mp3';
-                        let audio = new Audio(src);
-                        audio.play();
-                        clients.forEach(function (socketListId) {
-                            if (!connections[socketListId]) {
-                                connections[socketListId] = new RTCPeerConnection(peerConnectionConfig);
-                                //Wait for their ice candidate       
-                                connections[socketListId].onicecandidate = function () {
-                                    if (event.candidate != null) {
-                                        console.log('SENDING ICE');
-                                        socket.emit('signal', socketListId, JSON.stringify({'ice': event.candidate}));
-                                    }
-                                }
-
-                                //Wait for their video stream
-                                connections[socketListId].onaddstream = function (event) {
-                                    console.log("adding stream event")
-                                    gotRemoteStream(event, socketListId, avatars)
-                                }
-
-                                //Add the local video stream
-                                connections[socketListId].addStream(localStream);
-                            }
-                        });
-
-                        //Create an offer to connect with your local description
-
-                        if (count >= 2) {
-                            connections[id].createOffer().then(function (description) {
-                                connections[id].setLocalDescription(description).then(function () {
-                                    // console.log(connections);
-                                    socket.emit('signal', id, JSON.stringify({'sdp': connections[id].localDescription}));
-                                }).catch(e => console.log(e));
-                            });
-                        }
-                    });
-                })
-
-            });
-    } else {
-        alert('Your browser does not support getUserMedia API');
-    }
-}
-
-function getScreenMediaSuccess(stream) {
-    screensharing = true;
-    screenStream = stream;
-}
-
-function getUserMediaSuccess(stream) {
-    localStream = stream;
-    try {
-        localVideo.srcObject = stream;
-    } catch (error) {
-        localVideo.src = window.URL.createObjectURL(stream);
-    }
-    let localVideoElement = document.querySelector(".local-video")
-    localVideoElement.onclick = selectCam(localVideoElement)
-    updateCSS()
-}
-
-function gotRemoteStream(event, id, avatars) {
-
-    let video = document.createElement('video'),
-
-        inputsStatuses = htmlToElement(`
-        <div class="remote-inputs-statuses">
-            <i class="remote-sound-status remote-input-status fas fa-microphone-slash"></i>
-            <i class="remote-video-status remote-input-status fas fa-video-slash"></i>
-        </div>
-        `),
-        div = document.createElement('div')
-
-    div.classList.add("remote-video")
-    div.classList.add("video")
-    if (avatars[id]) {
-        let avatar = document.createElement('i')
-        appendAvatar(avatars[id], div)
-    }
-    video.setAttribute('data-socket', id);
-    div.onclick = selectCam(div)
-    try {
-        video.srcObject = event.stream;
-    } catch (error) {
-        video.src = window.URL.createObjectURL(event.stream);
-    }
-
-    video.autoplay = true;
-    video.muted = devmode == false;
-    video.playsinline = true;
-
-    div.appendChild(video);
-    div.appendChild(inputsStatuses)
-    document.querySelector('.videos').appendChild(div);
-    updateCSS()
-
-}
-
-function gotMessageFromServer(fromId, message) {
-    socket.emit("video-status-changed", videoEnabled)
-    socket.emit("sound-status-changed", audioEnabled)
-    //Parse the incoming signal
-    var signal = JSON.parse(message)
-
-    //Make sure it's not coming from yourself
-    if (fromId != socketId) {
-
-        if (signal.sdp) {
-            connections[fromId].setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function () {
-                if (signal.sdp.type == 'offer') {
-                    connections[fromId].createAnswer().then(function (description) {
-                        connections[fromId].setLocalDescription(description).then(function () {
-                            socket.emit('signal', fromId, JSON.stringify({'sdp': connections[fromId].localDescription}));
-                        }).catch(e => console.log(e));
-                    }).catch(e => console.log(e));
-                }
-            }).catch(e => console.log(e));
-        }
-
-        if (signal.ice) {
-            connections[fromId].addIceCandidate(new RTCIceCandidate(signal.ice)).catch(e => console.log(e));
-        }
-    }
-}
 
 
 function updateCSS() {
