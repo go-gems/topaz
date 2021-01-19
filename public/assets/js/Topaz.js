@@ -1,5 +1,7 @@
 import WsManager from "./WsManager.js";
 import PeerManager from "./PeerManager.js";
+import Controls from "./Controls.js";
+
 
 export default class Topaz {
 
@@ -7,17 +9,9 @@ export default class Topaz {
     peerId
     wsManager
     userList = {}
-
+    controls
     constructor() {
-        this.peerManager = new PeerManager(new Peer({
-                config: {
-                    'iceServers': [
-                        {url: 'stun:stun.l.google.com:19302'},
-                        {url: 'stun:stun.services.mozilla.com'},
-                    ]
-                }
-            }
-        ))
+        this.setupPeerManager()
         this.setupPeerHandlers()
     }
 
@@ -37,9 +31,16 @@ export default class Topaz {
             this.userList = data.userList
         })
 
-        this.wsManager.on("user-joined", (data) => {
+        this.wsManager.on("user-joined", data => {
             this.userList[data.peerId] = data
-            this.peerManager.call(data.peerId)
+            this.peerManager.sendMyStreams(data.peerId)
+            this.wsManager.send("call-me", {"from": this.peerId, "to": data.peerId})
+            // from A to B
+        })
+        this.wsManager.on("call-request", data => {
+            // B will store client A and make a call
+            this.userList[data.peerId] = data
+            this.peerManager.sendMyStreams(data.peerId)
         })
 
         this.wsManager.on("user-left", (data) => {
@@ -47,9 +48,36 @@ export default class Topaz {
             this.peerManager.closeCall(data)
         })
 
+        this.wsManager.on("stream-status-changed", (data)=>{
+            this.peerManager.changeStreamStatus(data.peerId, data.type, data.on);
+
+        })
+
         this.wsManager.ws.onopen = () => {
             this.wsManager.send("login", {peerId: this.peerId})
         }
     }
 
+    setupPeerManager() {
+        this.peerManager = new PeerManager(new Peer({
+                config: {
+                    'iceServers': [
+                        {url: 'stun:stun.l.google.com:19302'},
+                        {url: 'stun:stun.services.mozilla.com'},
+                    ]
+                }
+            }
+        ))
+        this.controls = new Controls(this.peerManager)
+
+        this.peerManager.onOpenedStream = (type) => {
+            this.wsManager.send("stream-status-changed", {peerId: this.peerId, type: type, on: true})
+        }
+
+        this.peerManager.onClosedStream = (type) => {
+            this.wsManager.send("stream-status-changed", {peerId: this.peerId, type: type, on: false})
+
+        }
+
+    }
 }
