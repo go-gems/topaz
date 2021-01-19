@@ -72,9 +72,5 @@ export default class PeerClient {
         }
     }
 
-    setSound(b) {
-        this.video.muted = !b
-    }
-
 
 }
