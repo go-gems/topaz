@@ -6,156 +6,64 @@ export default class PeerManager {
     TYPE_SCREENSHARE = "SCREENSHARE"
 
     peer
-    localUser
+    selfUser
     remoteUsers = {}
-    videoEnabled = true
-    audioEnabled = true
-    onClosedStream = (type) => {
-    }
-    onOpenedStream = (type) => {
-    }
 
-    constructor(peer) {
+    constructor(peer, callback) {
         this.peer = peer
-        this.localUser = new PeerClient("__default")
-    }
+        this.selfUser = new PeerClient("__default")
+        this.waitForCall()
+        this.startMyStream().then(this.initCalls(this))
 
-    async startPeering() {
-        await this.startMyStream()
-        this.peer.on('call', call => {
-            if (!this.remoteUsers[call.peer]) {
-                this.remoteUsers[call.peer] = new PeerClient(call.peer)
-                document.querySelector(".videos").appendChild(this.remoteUsers[call.peer].htmlElement)
-
-            }
-
-            call.answer(null);
-            call.on('stream', this.processReceivingMediaStream(call));
-        });
-    }
-
-    async videoStart() {
-        return await navigator.mediaDevices.getUserMedia({video: true, audio: false})
-            .then(stream => {
-                this.localUser.joinVideoStream(stream)
-            })
-    }
-
-    async audioStart() {
-        return await navigator.mediaDevices.getUserMedia({video: false, audio: true})
-            .then(stream => {
-                this.localUser.joinAudioStream(stream);
-                this.localUser.audio.muted = true;
-            })
     }
 
     async startMyStream() {
-
         if (navigator.mediaDevices.getUserMedia) {
-            await this.videoStart()
-            await this.audioStart()
+            return await navigator.mediaDevices.getUserMedia({video: true, audio: true})
+                .then(this.getUserMediaSuccess(this))
         }
-        document.querySelector(".videos").appendChild(this.localUser.htmlElement)
+        // Here I should as well implement the audio media but for now let's start simply with the video+audio single streamline.
     }
 
-    sendMyStreams(peerId) {
-        if (this.videoEnabled) this.call(peerId, this.localUser.videoStream, this.TYPE_VIDEO)
-        if (this.audioEnabled) this.call(peerId, this.localUser.audioStream, this.TYPE_AUDIO)
-    }
 
-    call(peerId, stream, type) {
-        let callInstance = this.peer.call(peerId, stream, {metadata: {callType: type}});
-
-        callInstance.on('close', () => {
-
-        })
-        if (!this.remoteUsers[peerId]) {
-            this.remoteUsers[peerId] = new PeerClient(peerId)
-            document.querySelector(".videos").appendChild(this.remoteUsers[peerId].htmlElement)
-        }
-        this.remoteUsers[peerId].calls[type] = callInstance
-    }
-
-    onCloseCall(callback) {
-
-    }
-
-    closeCall(peerId) {
-        if (this.remoteUsers[peerId]) {
-            document.querySelector(".videos").removeChild(this.remoteUsers[peerId].htmlElement);
-            delete this.remoteUsers[peerId]
-        }
-    }
-
-    processReceivingMediaStream(call) {
-        let callType = call.metadata.callType
-        return stream => {
-            switch (callType) {
-                case this.TYPE_VIDEO:
-                    this.remoteUsers[call.peer].joinVideoStream(stream)
-                    break
-                case this.TYPE_AUDIO:
-                    this.remoteUsers[call.peer].joinAudioStream(stream)
-                    break
+    initCalls(self) {
+        return () => {
+            // And this is where I stopped at 2 AM as I don't f**king know how to efficiently loop in object in js
+            // unless using the for Object.keys
+            for (let i = 0; i < Object.keys(userList).length; i++) {
+                let user = userList[Object.keys(userList)[i]];
+                this.remoteUsers[user.peerId] = new PeerClient(user.peerId)
+                self.call(user.peerId, this.TYPE_VIDEO)
             }
         }
     }
 
-    closeStream(type) {
-        for (let peerId of Object.keys(this.remoteUsers)) {
-            this.remoteUsers[peerId].closeStream(type);
-        }
-        this.onClosedStream(type)
+    async waitForCall() {
+        console.log("waiting for call")
+        this.peer.on('call', call => {
+            console.log(call)// Answer the call, providing our mediaStream
+            call.answer(this.selfUser.videoStream);
+            call.on('stream', this.processReceivingMediaStream(this, call));
+        });
     }
 
-    openStream(stream, type) {
-        for (let peerId of Object.keys(this.remoteUsers)) {
-            this.call(peerId, stream, type)
-        }
-        this.onOpenedStream(type)
-
+    call(peerId, type) {
+        let call = this.peer.call(peerId, this.selfUser.videoStream);
+        call.on('stream', this.processReceivingMediaStream(this, call));
     }
 
-    disableVideo() {
-        this.videoEnabled = false
-        for (let track of this.localUser.videoStream.getTracks()) {
-            track.stop()
-        }
-        this.closeStream(this.TYPE_VIDEO)
+    processReceivingMediaStream(self, call) {
+        return stream => {
+            console.log(call, stream)
 
 
-    }
-
-    disableAudio() {
-        this.audioEnabled = false
-        for (let track of this.localUser.audioStream.getTracks()) {
-            track.stop()
-        }
-        this.closeStream(this.TYPE_AUDIO)
-    }
-
-    async enableVideo() {
-        this.videoEnabled = true
-        await this.videoStart()
-        this.openStream(this.localUser.videoStream, this.TYPE_VIDEO)
-    }
-
-    async enableAudio() {
-        this.audioEnabled = true
-        await this.audioStart()
-        this.openStream(this.localUser.videoStream, this.TYPE_VIDEO)
-    }
-
-    changeStreamStatus(peerId, type, status) {
-        if (!this.remoteUsers[peerId]) return;
-        switch (type) {
-            case this.TYPE_VIDEO:
-                this.remoteUsers[peerId].toggleVideo(status)
-                break
-            case this.TYPE_AUDIO:
-                this.remoteUsers[peerId].toggleAudio(status)
-                break
         }
     }
 
+    getUserMediaSuccess(self) {
+        return stream => {
+            self.selfUser.joinVideoStream(stream)
+            document.querySelector(".videos").appendChild(this.selfUser.htmlElement)
+        }
+    }
 }
