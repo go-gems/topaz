@@ -114,6 +114,7 @@ func broadcast(payload Payload) {
 	broadcastExcept("", payload)
 }
 func broadcastExcept(peerId string, payload Payload) {
+	log.Printf("broadcast: %v to all except %v", payload.Type,peerId)
 	for _, client := range clientList {
 		if client.PeerId == peerId {
 			continue

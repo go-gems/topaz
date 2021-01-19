@@ -30,5 +30,9 @@ export default class PeerClient {
         this.video.playsinline = true;
     }
 
+    setSound(b) {
+        this.video.muted = !b
+    }
+
 
 }
