@@ -8,7 +8,6 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"time"
 )
 
 type M map[string]interface{}
@@ -102,10 +101,6 @@ func checkWhoisDead() {
 		delete(clientList, peerId)
 		broadcast(Payload{"user-left", peerId})
 
-		// This is in case of only refreshing the page
-		// The quick'n'dirty solution to tell the refreshed user that the other guy's not here anymore.
-		time.Sleep(3 * time.Second)
-		broadcast(Payload{"user-left", peerId})
 	}
 
 }
@@ -114,7 +109,7 @@ func broadcast(payload Payload) {
 	broadcastExcept("", payload)
 }
 func broadcastExcept(peerId string, payload Payload) {
-	log.Printf("broadcast: %v to all except %v", payload.Type,peerId)
+	log.Printf("broadcast: %v to all except %v", payload.Type, peerId)
 	for _, client := range clientList {
 		if client.PeerId == peerId {
 			continue
@@ -126,7 +121,15 @@ func broadcastExcept(peerId string, payload Payload) {
 // onLogin websocket Event : returns logged with the client's information, then starts a loop check
 func onLogin(c *websocket.Conn, peerId string) {
 	clientList[peerId] = Client{c, peerId, randomUsername()}
-	c.WriteJSON(Payload{"logged", clientList[peerId]})
+
+	loggedInUserPayload := struct {
+		Self     Client            `json:"self"`
+		UserList map[string]Client `json:"userList"`
+	}{
+		clientList[peerId],
+		clientList,
+	}
+	c.WriteJSON(Payload{"logged", loggedInUserPayload})
 	broadcastExcept(peerId, Payload{"user-joined", clientList[peerId]})
 }
 
