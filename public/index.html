@@ -2,7 +2,7 @@
 <html>
 <head>
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-    <link rel="stylesheet" href="public/main.css">
+    <link rel="stylesheet" href="/main.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.13.0/css/all.css"
           integrity="sha384-IIED/eyOkM6ihtOiQsX2zizxFBphgnv1zbe1bKA+njdFzkr6cDNy16jfIKWu4FNH" crossorigin="anonymous">
@@ -33,10 +33,12 @@
 
         </div>
         <div class="videos">
+            <!--
             <div class="local-video video">
                 <video id="localVideo" autoplay muted playsinline></video>
 
             </div>
+            -->
         </div>
         <div id="pinned-video"></div>
 
@@ -87,13 +89,15 @@
     </div>
 </div>
 <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+<script src="/settings.js"></script>
 <script>
-    let userList = {{.Clients}}
-    const settings = {{.Settings}}
+    let userList = {};
+    let topaz=null;
 </script>
-<script src="public/assets/js/WsManager.js" type="module"></script>
-<script src="public/assets/js/Topaz.js" type="module"></script>
-<script src="public/assets/js/index.js" type="module"></script>
+<script src="/assets/js/front.js"></script>
+<script src="/assets/js/WsManager.js" type="module"></script>
+<script src="/assets/js/Topaz.js" type="module"></script>
+<script src="/assets/js/index.js" type="module"></script>
 
 </body>
 </html>

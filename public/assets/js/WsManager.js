@@ -3,7 +3,11 @@ export default class WsManager {
     actions = {}
 
     constructor() {
-        this.ws = new WebSocket("ws://" + window.location.hostname + (window.location.port ? `:${window.location.port}` : "") + "/ws")
+        let protocol = "ws://"
+        if (window.location.protocol == "https:") {
+            protocol = "wss://"
+        }
+        this.ws = new WebSocket(protocol + window.location.hostname + (window.location.port ? `:${window.location.port}` : "") + "/ws")
         this.ws.onmessage = this._onEvent(this)
     }
 

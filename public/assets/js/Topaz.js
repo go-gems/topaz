@@ -1,42 +1,56 @@
 import WsManager from "./WsManager.js";
 import PeerManager from "./PeerManager.js";
+import Controls from "./Controls.js";
+
 
 export default class Topaz {
 
     peerManager
     peerId
     wsManager
-
+    userList = {}
+    controls
     constructor() {
-        this.peerManager = new PeerManager(new Peer())
+        this.setupPeerManager()
         this.setupPeerHandlers()
-
     }
 
     setupPeerHandlers() {
         this.peerManager.peer.on('open', id => {
             this.peerId = id
-            console.log('Peer ID : ' + id)
-            this.initWs()
-            this.peerManager.initCalls()
+            this.peerManager.startPeering()
+                .then(() => {
+                    this.initWs()
+                })
         })
     }
 
     initWs() {
         this.wsManager = new WsManager()
         this.wsManager.on("logged", (data) => {
-            this.wsManager.send("message", {peerId: this.peerId, message: "i'm logged :)"})
+            this.userList = data.userList
         })
-        this.wsManager.on("user-joined", (data) => {
-            userList[data.peerId] = data
+
+        this.wsManager.on("user-joined", data => {
+            this.userList[data.peerId] = data
+            this.peerManager.sendMyStreams(data.peerId)
+            this.wsManager.send("call-me", {"from": this.peerId, "to": data.peerId})
+            // from A to B
+        })
+        this.wsManager.on("call-request", data => {
+            // B will store client A and make a call
+            this.userList[data.peerId] = data
+            this.peerManager.sendMyStreams(data.peerId)
         })
 
         this.wsManager.on("user-left", (data) => {
             delete userList[data]
+            this.peerManager.closeCall(data)
         })
 
-        this.wsManager.on("message", (data) => {
-            console.log(data.username, ":", data.message)
+        this.wsManager.on("stream-status-changed", (data)=>{
+            this.peerManager.changeStreamStatus(data.peerId, data.type, data.on);
+
         })
 
         this.wsManager.ws.onopen = () => {
@@ -44,4 +58,26 @@ export default class Topaz {
         }
     }
 
+    setupPeerManager() {
+        this.peerManager = new PeerManager(new Peer({
+                config: {
+                    'iceServers': [
+                        {url: 'stun:stun.l.google.com:19302'},
+                        {url: 'stun:stun.services.mozilla.com'},
+                    ]
+                }
+            }
+        ))
+        this.controls = new Controls(this.peerManager)
+
+        this.peerManager.onOpenedStream = (type) => {
+            this.wsManager.send("stream-status-changed", {peerId: this.peerId, type: type, on: true})
+        }
+
+        this.peerManager.onClosedStream = (type) => {
+            this.wsManager.send("stream-status-changed", {peerId: this.peerId, type: type, on: false})
+
+        }
+
+    }
 }
