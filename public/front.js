@@ -7,7 +7,7 @@ function toggleVideo(){
     topaz.controls.toggleVideo()
 
 }
-function startScreen(){
-    topaz.controls.shareScreen()
+function toggleScreen(){
+    topaz.controls.toggleScreenSharing()
 
 }

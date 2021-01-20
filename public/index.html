@@ -2,7 +2,7 @@
 <html>
 <head>
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-    <link rel="stylesheet" href="/main.css">
+    <link rel="stylesheet" href="/dist/css/style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.13.0/css/all.css"
           integrity="sha384-IIED/eyOkM6ihtOiQsX2zizxFBphgnv1zbe1bKA+njdFzkr6cDNy16jfIKWu4FNH" crossorigin="anonymous">
@@ -61,8 +61,7 @@
                 <div class="button" onclick="toggleVideo()">
                     <i id="video-button" class="fas fa-video"></i>
                 </div>
-
-                <div class="button" onclick="startScreen()">
+                <div class="button" onclick="toggleScreen()">
                     <i id="video-button" class="fas fa-desktop"></i>
                 </div>
             </div>
@@ -98,10 +97,8 @@
     let userList = {};
     let topaz=null;
 </script>
-<script src="/assets/js/front.js"></script>
-<script src="/assets/js/WsManager.js" type="module"></script>
-<script src="/assets/js/Topaz.js" type="module"></script>
-<script src="/assets/js/index.js" type="module"></script>
+<script src="/front.js"></script>
+<script src="/dist/main.js"></script>
 
 </body>
 </html>

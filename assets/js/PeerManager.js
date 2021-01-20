@@ -11,7 +11,7 @@ export default class PeerManager {
     remoteUsers = {}
     videoEnabled = true
     audioEnabled = true
-    screenShared = false
+    screenSharingEnabled = false
     onClosedStream = (type) => {
     }
     onOpenedStream = (type) => {
@@ -37,6 +37,7 @@ export default class PeerManager {
     }
 
     async videoStart() {
+        this.screenSharingEnabled=false
         await VideoStream(stream => {
             this.localUser.joinVideoStream(stream)
         })
@@ -51,6 +52,7 @@ export default class PeerManager {
     async shareScreenStart(){
         await SharedScreen(stream=>{
             this.localUser.joinScreenShareStream(stream);
+            this.screenSharingEnabled=true
             this.openStream(this.localUser.videoStream, this.TYPE_VIDEO)
 
         })

@@ -14,8 +14,10 @@ export default class Controls {
         this.peerManager.videoEnabled ? this.peerManager.disableVideo() : this.peerManager.enableVideo()
 
     }
-    shareScreen(){
-        this.peerManager.shareScreenStart()
+
+    toggleScreenSharing() {
+
+        this.peerManager.screenSharingEnabled ? this.peerManager.videoStart() : this.peerManager.shareScreenStart()
     }
 
 }
