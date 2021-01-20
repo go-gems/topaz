@@ -37,6 +37,18 @@ export default class PeerClient {
         this.video.playsinline = true;
 
     }
+    joinScreenShareStream(stream){
+        this.videoStream = stream
+        try {
+            this.video.srcObject = this.videoStream;
+        } catch (error) {
+            this.video.src = window.URL.createObjectURL(this.videoStream);
+        }
+
+        this.video.autoplay = true;
+        this.video.muted = false;
+        this.video.playsinline = true;
+    }
 
     joinAudioStream(stream) {
         this.audioStream = stream

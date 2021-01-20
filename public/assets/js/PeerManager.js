@@ -1,4 +1,5 @@
 import PeerClient from "./PeerClient.js";
+import {AudioStream, SharedScreen, VideoStream} from "./MediaStreams.js";
 
 export default class PeerManager {
     TYPE_VIDEO = "VIDEO"
@@ -10,6 +11,7 @@ export default class PeerManager {
     remoteUsers = {}
     videoEnabled = true
     audioEnabled = true
+    screenShared = false
     onClosedStream = (type) => {
     }
     onOpenedStream = (type) => {
@@ -35,19 +37,25 @@ export default class PeerManager {
     }
 
     async videoStart() {
-        return await navigator.mediaDevices.getUserMedia({video: true, audio: false})
-            .then(stream => {
-                this.localUser.joinVideoStream(stream)
-            })
+        await VideoStream(stream => {
+            this.localUser.joinVideoStream(stream)
+        })
     }
 
     async audioStart() {
-        return await navigator.mediaDevices.getUserMedia({video: false, audio: true})
-            .then(stream => {
-                this.localUser.joinAudioStream(stream);
-                this.localUser.audio.muted = true;
-            })
+        await AudioStream(stream => {
+            this.localUser.joinAudioStream(stream);
+            this.localUser.audio.muted = true;
+        })
     }
+    async shareScreenStart(){
+        await SharedScreen(stream=>{
+            this.localUser.joinScreenShareStream(stream);
+            this.openStream(this.localUser.videoStream, this.TYPE_VIDEO)
+
+        })
+    }
+
 
     async startMyStream() {
 
