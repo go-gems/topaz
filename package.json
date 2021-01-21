@@ -9,6 +9,6 @@
   },
   "devDependencies": {
     "http": "0.0.0",
-    "socket.io": "^1.7.3"
+    "socket.io": "^2.4.0"
   }
 }
