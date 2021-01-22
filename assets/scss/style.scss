@@ -1,0 +1,118 @@
+@import "https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap";
+@import "variables/_colors";
+
+html, body {
+  margin: 0px;
+  padding: 0px;
+}
+
+
+.peer {
+  height: 100%;
+  width: 100%;
+  min-height: max-content;
+  background-color: #383838;
+
+  .screen {
+    display: none;
+
+  }
+
+  .video {
+    width: 100%;
+    height: 100%;
+  }
+
+  &.screen-share {
+    position: relative;
+
+    .screen {
+      display: block;
+      width: 100%;
+      height: 100%;
+
+    }
+
+    .video {
+      width: 10%;
+      height: 10%;
+      bottom: 0;
+      right: 0;
+      position: absolute;
+
+    }
+  }
+}
+
+
+.peer-list {
+  background-color: #383838;
+
+  display: grid;
+  height: 100vh;
+  width: 100vw;
+
+  .controls {
+    background: $primary-color;
+
+    border-radius: 8px;
+    position: absolute;
+    top: 0;
+    right: 10px;
+    width: 100%;
+    max-width: 180px;
+    margin:10px auto;
+    overflow: hidden;
+    display: grid;
+    z-index: 1000;
+    cursor: pointer;
+
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  &.focus-layout {
+    .controls {
+      position: static;
+    }
+
+    display: flex;
+    flex-direction: column;
+    width: 199px;
+
+    .peer {
+      height: auto;
+    }
+  }
+
+}
+
+.scene {
+  display: none;
+  width: calc(100vw - 200px);
+  padding: 0px;
+  height: 100vh;
+  float: left;
+
+  .peer {
+    background-color: #3c3c3C;
+
+  }
+}
+
+
+.button {
+  padding: 10px;
+  text-align: center;
+  border:1px solid rgba(0,0,0,0.1);
+  &.active{
+    background: rgba(0,0,0,0.3);
+  }
+
+  &:hover{
+    background: rgba(0,0,0,0.1);
+  }
+  &:active{
+    background: rgba(0,0,0,0.2);
+
+  }
+}

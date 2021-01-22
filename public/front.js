@@ -5,6 +5,9 @@ function toggleSound(){
 }
 function toggleVideo(){
     topaz.controls.toggleVideo()
-    console.log("coucou");
+
+}
+function toggleScreen(){
+    topaz.controls.toggleScreenSharing()
 
 }
