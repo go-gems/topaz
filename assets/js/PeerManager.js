@@ -1,5 +1,6 @@
 import PeerClient from "./PeerClient.js";
 import {AudioStream, SharedScreen, VideoStream} from "./MediaStreams.js";
+import LayoutManager from "./LayoutManager";
 
 export default class PeerManager {
     TYPE_VIDEO = "VIDEO"
@@ -7,11 +8,14 @@ export default class PeerManager {
     TYPE_SCREENSHARE = "SCREENSHARE"
 
     peer
-    localUser
+    localUser = new PeerClient("__default")
     remoteUsers = {}
     videoEnabled = true
     audioEnabled = true
     screenSharingEnabled = false
+    layoutManager = new LayoutManager()
+
+
     onClosedStream = (type) => {
     }
     onOpenedStream = (type) => {
@@ -19,7 +23,6 @@ export default class PeerManager {
 
     constructor(peer) {
         this.peer = peer
-        this.localUser = new PeerClient("__default")
     }
 
     async startPeering() {
@@ -27,7 +30,7 @@ export default class PeerManager {
         this.peer.on('call', call => {
             if (!this.remoteUsers[call.peer]) {
                 this.remoteUsers[call.peer] = new PeerClient(call.peer)
-                document.querySelector(".videos").appendChild(this.remoteUsers[call.peer].htmlElement)
+                this.layoutManager.insertPeer(this.remoteUsers[call.peer])
 
             }
 
@@ -37,7 +40,6 @@ export default class PeerManager {
     }
 
     async videoStart() {
-        this.screenSharingEnabled=false
         await VideoStream(stream => {
             this.localUser.joinVideoStream(stream)
         })
@@ -49,12 +51,13 @@ export default class PeerManager {
             this.localUser.audio.muted = true;
         })
     }
-    async shareScreenStart(){
-        await SharedScreen(stream=>{
-            this.localUser.joinScreenShareStream(stream);
-            this.screenSharingEnabled=true
-            this.openStream(this.localUser.videoStream, this.TYPE_VIDEO)
 
+    async screenStart() {
+        await SharedScreen(stream => {
+            this.localUser.joinScreenShareStream(stream, () => {
+                this.localUser.screenSharingEnabled = false
+                this.closeStream(this.TYPE_SCREENSHARE)
+            });
         })
     }
 
@@ -65,12 +68,13 @@ export default class PeerManager {
             await this.videoStart()
             await this.audioStart()
         }
-        document.querySelector(".videos").appendChild(this.localUser.htmlElement)
+        this.layoutManager.insertPeer(this.localUser)
     }
 
     sendMyStreams(peerId) {
-        if (this.videoEnabled) this.call(peerId, this.localUser.videoStream, this.TYPE_VIDEO)
-        if (this.audioEnabled) this.call(peerId, this.localUser.audioStream, this.TYPE_AUDIO)
+        if (this.localUser.videoEnabled) this.call(peerId, this.localUser.videoStream, this.TYPE_VIDEO)
+        if (this.localUser.audioEnabled) this.call(peerId, this.localUser.audioStream, this.TYPE_AUDIO)
+        if (this.localUser.screenSharingEnabled) this.call(peerId, this.localUser.screenStream, this.TYPE_SCREENSHARE)
     }
 
     call(peerId, stream, type) {
@@ -81,18 +85,15 @@ export default class PeerManager {
         })
         if (!this.remoteUsers[peerId]) {
             this.remoteUsers[peerId] = new PeerClient(peerId)
-            document.querySelector(".videos").appendChild(this.remoteUsers[peerId].htmlElement)
+            this.layoutManager.insertPeer(this.remoteUsers[peerId])
         }
         this.remoteUsers[peerId].calls[type] = callInstance
     }
 
-    onCloseCall(callback) {
-
-    }
-
     closeCall(peerId) {
         if (this.remoteUsers[peerId]) {
-            document.querySelector(".videos").removeChild(this.remoteUsers[peerId].htmlElement);
+            this.layoutManager.removePeer(this.remoteUsers[peerId])
+
             delete this.remoteUsers[peerId]
         }
     }
@@ -106,6 +107,10 @@ export default class PeerManager {
                     break
                 case this.TYPE_AUDIO:
                     this.remoteUsers[call.peer].joinAudioStream(stream)
+                    break
+                case this.TYPE_SCREENSHARE:
+                    this.remoteUsers[call.peer].joinScreenShareStream(stream, () => {
+                    })
                     break
             }
         }
@@ -127,17 +132,18 @@ export default class PeerManager {
     }
 
     disableVideo() {
-        this.videoEnabled = false
+        this.localUser.videoEnabled = false
         for (let track of this.localUser.videoStream.getTracks()) {
             track.stop()
         }
+        this.localUser.toggleVideo(false)
         this.closeStream(this.TYPE_VIDEO)
 
 
     }
 
     disableAudio() {
-        this.audioEnabled = false
+        this.localUser.audioEnabled = false
         for (let track of this.localUser.audioStream.getTracks()) {
             track.stop()
         }
@@ -145,25 +151,52 @@ export default class PeerManager {
     }
 
     async enableVideo() {
-        this.videoEnabled = true
+        this.localUser.videoEnabled = true
         await this.videoStart()
         this.openStream(this.localUser.videoStream, this.TYPE_VIDEO)
     }
 
     async enableAudio() {
-        this.audioEnabled = true
+        this.localUser.audioEnabled = true
         await this.audioStart()
-        this.openStream(this.localUser.videoStream, this.TYPE_VIDEO)
+        this.openStream(this.localUser.audioStream, this.TYPE_AUDIO)
     }
+
+    async enableScreenShare() {
+        try {
+            await this.screenStart()
+            this.localUser.screenSharingEnabled = true
+            this.localUser.toggleScreen(true)
+            this.openStream(this.localUser.screenStream, this.TYPE_SCREENSHARE)
+        }catch(e){
+            //donothing
+        }
+    }
+
+    disableScreenShare() {
+        this.localUser.toggleScreen(false)
+        this.localUser.screenSharingEnabled = false
+        for (let track of this.localUser.screenStream.getTracks()) {
+            track.stop()
+        }
+        this.closeStream(this.TYPE_SCREENSHARE)
+    }
+
 
     changeStreamStatus(peerId, type, status) {
         if (!this.remoteUsers[peerId]) return;
         switch (type) {
             case this.TYPE_VIDEO:
+                this.remoteUsers[peerId].videoEnabled = status
                 this.remoteUsers[peerId].toggleVideo(status)
                 break
             case this.TYPE_AUDIO:
+                this.remoteUsers[peerId].audioEnabled = status
                 this.remoteUsers[peerId].toggleAudio(status)
+                break
+            case this.TYPE_SCREENSHARE:
+                this.remoteUsers[peerId].screenSharingEnabled = status
+                this.remoteUsers[peerId].toggleScreen(status)
                 break
         }
     }

@@ -14,88 +14,28 @@
 <body>
 <div class="base-layout">
     <div class="container">
-        <div class="chat-panel">
-            <div class="chat-content">
-
-            </div>
-            <div class="chat-username">
-                <div onclick="toggleEditUsername()"><label class="readonly-name">username</label></div>
-                <input onkeydown="updateUsername(this,event)"/>
-            </div>
-            <div class="chat-box">
-
-                <textarea id="chat-textarea" onkeydown="sendMessage(event)" autofocus
-                          placeholder="Press enter to send a message"></textarea>
-                <div id="send-message-button" onclick="sendMessage(event)">
-                    <i class="fas fa-paper-plane"></i>
-                </div>
-            </div>
-
-        </div>
-        <div class="videos">
-            <!--
-            <div class="local-video video">
-                <video id="localVideo" autoplay muted playsinline></video>
-
-            </div>
-            -->
-        </div>
-        <div id="pinned-video"></div>
-
-    </div>
-
-
-    <div id="bottom-bar">
-
-        <div class="left">
+        <div class="scene"></div>
+        <div class="peer-list">
             <div class="controls">
-                <i id="chat-button" onclick="toggleChat()" class="fas fa-comment-alt-lines"></i>
-                <i class="icon-ammonite"></i>
-            </div>
-        </div>
-        <div class="center">
-            <div class="controls">
-                <div class="button" onclick="toggleSound()">
-                    <i id="sound-button" class="fas fa-microphone"></i>
+                <div id="sound-button" class="button" onclick="toggleSound()">
+                    <i class="fas fa-microphone"></i>
                 </div>
-                <div class="button" onclick="toggleVideo()">
-                    <i id="video-button" class="fas fa-video"></i>
+                <div id="video-button" class="button" onclick="toggleVideo()">
+                    <i class="fas fa-video"></i>
                 </div>
-                <div class="button" onclick="toggleScreen()">
-                    <i id="video-button" class="fas fa-desktop"></i>
-                </div>
-            </div>
-        </div>
-        <div class="right">
-            <div class="controls">
-
-                <i id="parameters-button" onclick="toggleParameters()" class="fas fa-cog"></i>
-            </div>
-            <div id="parameters-modal">
-                <h2 id="parameters-title">Parameters</h2>
-                <i id="close-parameters-button" onclick="toggleParameters()" class="fas fa-times"></i>
-                <div class="input-selection-wrapper">
-                    <label>Select your camera</label>
-                    <select id="videoInputDevices">
-
-                    </select>
-
-                </div>
-                <div class="input-selection-wrapper">
-                    <label>Select your microphone</label>
-                    <select id="audioInputDevices">
-
-                    </select>
+                <div id="screen-button" class="button" onclick="toggleScreen()">
+                    <i class="fas fa-desktop"></i>
                 </div>
             </div>
         </div>
     </div>
+
 </div>
 <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
 <script src="/settings.js"></script>
 <script>
     let userList = {};
-    let topaz=null;
+    let topaz = null;
 </script>
 <script src="/front.js"></script>
 <script src="/dist/main.js"></script>

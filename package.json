@@ -5,6 +5,7 @@
   "author": "decima <h.larget@gmail.com>",
   "dependencies": {
     "@babel/preset-es2015": "^7.0.0-beta.53",
+    "material-colors": "^1.2.6",
     "sass": "^1.32.4",
     "sass-loader": "^10.1.1",
     "webpack": "^5.16.0",

@@ -33,6 +33,9 @@ export default class Topaz {
 
         this.wsManager.on("user-joined", data => {
             this.userList[data.peerId] = data
+            let src = '/on.mp3';
+            let audio = new Audio(src);
+            audio.play();
             this.peerManager.sendMyStreams(data.peerId)
             this.wsManager.send("call-me", {"from": this.peerId, "to": data.peerId})
             // from A to B
