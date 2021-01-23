@@ -1,6 +1,6 @@
 export default class PeerClient {
     videoEnabled = true
-    audioEnabled = true
+    audioEnabled = false
     screenSharingEnabled = false
 
     peerId
@@ -14,11 +14,25 @@ export default class PeerClient {
     calls = {}
     properties = {}
     callsBar
+    placeholder
 
     constructor(peerId) {
         this.peerId = peerId
         this._initializeHTML()
 
+    }
+
+    setAvatar(avatar) {
+        let image = document.createElement("div")
+        image.classList.add("portrait")
+        image.innerHTML = avatar.image
+        image.style.backgroundColor = avatar.color
+        this.avatar.appendChild(image)
+        let name = document.createElement("div")
+            name.classList.add("title")
+        name.style.color = avatar.color
+        name.innerText = avatar.name
+        this.avatar.appendChild(name)
     }
 
     showControls(e) {
@@ -27,6 +41,8 @@ export default class PeerClient {
     }
 
     _initializeHTML() {
+        this.avatar = document.createElement("div")
+        this.avatar.classList.add("avatar-placeholder")
         this.video = document.createElement('video');
         this.video.classList.add("video")
         this.showControls(this.video)
@@ -40,6 +56,7 @@ export default class PeerClient {
         this.htmlElement = document.createElement('div');
         this.htmlElement.classList.add("peer");
         this.htmlElement.dataset.peerId = this.peerId;
+        this.htmlElement.appendChild(this.avatar);
         this.htmlElement.appendChild(this.video);
         this.htmlElement.appendChild(this.screen);
         this.htmlElement.appendChild(this.audio);
