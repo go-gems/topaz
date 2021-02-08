@@ -146,18 +146,21 @@ export default class PeerManager {
         for (let track of this.localUser.audioStream.getTracks()) {
             track.stop()
         }
+        this.localUser.toggleAudio(false)
         this.closeStream(this.TYPE_AUDIO)
     }
 
     async enableVideo() {
         this.localUser.videoEnabled = true
         await this.videoStart()
+        this.localUser.toggleVideo(true)
         this.openStream(this.localUser.videoStream, this.TYPE_VIDEO)
     }
 
     async enableAudio() {
         this.localUser.audioEnabled = true
         await this.audioStart()
+        this.localUser.toggleAudio(true)
         this.openStream(this.localUser.audioStream, this.TYPE_AUDIO)
     }
 
