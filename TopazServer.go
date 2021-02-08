@@ -2,20 +2,18 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
-	"text/template"
 	"log"
-	"math/rand"
 	"net/http"
 	"sync"
+	"text/template"
 )
 
 type M map[string]interface{}
 type Client struct {
-	Conn     *websocket.Conn `json:"-"`
-	PeerId   string          `json:"peerId"`
-	Username *string         `json:"username"`
+	Conn   *websocket.Conn `json:"-"`
+	PeerId string          `json:"peerId"`
+	Avatar *Avatar         `json:"avatar"`
 }
 type Settings struct {
 	//for later usage, peerJS server url for example
@@ -103,12 +101,12 @@ func onCallingRequest(callingSource string, callingDestination string) {
 
 func onMessage(PeerId string, Content string) {
 	clientMux.Lock()
-	username := clientList[PeerId].Username
+	Avatar := clientList[PeerId].Avatar
 	defer clientMux.Unlock()
 	broadcastExcept(PeerId, Payload{"message", M{
-		"peerId":   PeerId,
-		"message":  Content,
-		"username": username,
+		"peerId":  PeerId,
+		"message": Content,
+		"avatar":  Avatar,
 	}})
 }
 
@@ -151,10 +149,10 @@ func broadcastExcept(peerId string, payload Payload) {
 // onLogin websocket Event : returns logged with the client's information, then starts a loop check
 func onLogin(c *websocket.Conn, peerId string) {
 	clientMux.Lock()
-	clientList[peerId] = Client{c, peerId, randomUsername()}
+	clientList[peerId] = Client{c, peerId, PickOneAvatar()}
 
 	loggedInUserPayload := struct {
-		Self     Client            `json:"self"`
+		User     Client            `json:"user"`
 		UserList map[string]Client `json:"userList"`
 	}{
 		clientList[peerId],
@@ -177,20 +175,4 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-}
-
-/**
-This part is about Generating random usernames
-*/
-type wordList []string
-
-func (l wordList) pickOne() string {
-	return l[rand.Intn(len(l))]
-}
-func randomUsername() *string {
-	animal := wordList{"Bear", "Panda", "Koala", "Bunny", "Fox", "Unicorn", "Horse", "Kitty", "Elephant"}
-	title := wordList{"Miss", "Mr.", "Doctor", "MC", "Polar", "Sea", "Funny"}
-	adjective := wordList{"Funny", "Fantastic", "Awesome", "Pretty", "Little", "Big", "Giant", "Amusing", "Aroused", "Dishonored", "Asymptomatic", "Sick", "Lonely"}
-	response := fmt.Sprintf("%v %v %v", adjective.pickOne(), title.pickOne(), animal.pickOne())
-	return &response
 }

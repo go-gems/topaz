@@ -1,6 +1,6 @@
 export default class PeerClient {
     videoEnabled = true
-    audioEnabled = true
+    audioEnabled = false
     screenSharingEnabled = false
 
     peerId
@@ -14,11 +14,25 @@ export default class PeerClient {
     calls = {}
     properties = {}
     callsBar
+    placeholder
 
     constructor(peerId) {
         this.peerId = peerId
         this._initializeHTML()
 
+    }
+
+    setAvatar(avatar) {
+        let image = document.createElement("div")
+        image.classList.add("portrait")
+        image.innerHTML = avatar.image
+        image.style.backgroundColor = avatar.color
+        this.avatar.appendChild(image)
+        let name = document.createElement("div")
+        name.classList.add("title")
+        name.style.color = avatar.color
+        name.innerText = avatar.name
+        this.avatar.appendChild(name)
     }
 
     showControls(e) {
@@ -27,6 +41,8 @@ export default class PeerClient {
     }
 
     _initializeHTML() {
+        this.avatar = document.createElement("div")
+        this.avatar.classList.add("avatar-placeholder")
         this.video = document.createElement('video');
         this.video.classList.add("video")
         this.showControls(this.video)
@@ -35,17 +51,20 @@ export default class PeerClient {
         this.showControls(this.screen)
         this.audio = document.createElement('audio');
         this.audio.classList.add("audio")
+        this.audioIndicator = document.createElement("i")
+        this.audioIndicator.classList.add("fas", "fa-microphone-slash", "audio-indicator")
 
         this.showControls(this.audio)
         this.htmlElement = document.createElement('div');
         this.htmlElement.classList.add("peer");
         this.htmlElement.dataset.peerId = this.peerId;
+        this.htmlElement.appendChild(this.avatar);
         this.htmlElement.appendChild(this.video);
         this.htmlElement.appendChild(this.screen);
         this.htmlElement.appendChild(this.audio);
         this._callsBar_init()
         this.htmlElement.appendChild(this.callsBar)
-
+        this.htmlElement.appendChild(this.audioIndicator)
     }
 
     _callsBar_init() {
@@ -71,7 +90,7 @@ export default class PeerClient {
         this.video.autoplay = true;
         this.video.muted = true;
         this.video.playsinline = true;
-
+        this.avatar.style.zIndex = "-1";
 
     }
 
@@ -105,6 +124,7 @@ export default class PeerClient {
         this.audio.autoplay = true;
         this.audio.muted = false;
         this.audio.playsinline = true;
+        this.audioIndicator.classList.add("audio-indicator-disabled")
     }
 
     closeStream(type) {
@@ -116,7 +136,9 @@ export default class PeerClient {
 
     toggleAudio(b) {
         this.audio.muted = !b
-        // Here show mic on/off
+        this.audio.muted
+            ? this.audioIndicator.classList.remove("audio-indicator-disabled")
+            : this.audioIndicator.classList.add("audio-indicator-disabled")
     }
 
     toggleScreen(b) {
@@ -131,8 +153,10 @@ export default class PeerClient {
         // Here show video on/off
         if (!b) {
             this.video.style.display = "none"
+            this.avatar.style.zIndex = "10";
         } else {
             this.video.style.display = "block"
+            this.avatar.style.zIndex = "-1";
         }
     }
 

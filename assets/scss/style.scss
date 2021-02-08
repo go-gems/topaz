@@ -1,17 +1,70 @@
-@import "https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap";
+@import 'https://fonts.googleapis.com/css2?family=Open+Sans&display=swap';
+
 @import "variables/_colors";
+
+html {
+  background-color: #383838;
+
+}
 
 html, body {
   margin: 0px;
   padding: 0px;
+
 }
 
 
 .peer {
   height: 100%;
   width: 100%;
+  position: relative;
   min-height: max-content;
-  background-color: #383838;
+  box-sizing: border-box;
+
+  .audio-indicator {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    color: #9e372c;
+    opacity: 0.5;
+    font-size: 1.5em;
+  }
+
+  .audio-indicator-disabled {
+    display: none;
+  }
+
+  .avatar-placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+
+    .portrait {
+      border-radius: 100%;
+      overflow: hidden;
+
+      svg {
+        color: black;
+      }
+    }
+
+    .title {
+      font-size: 1.5em;
+      text-align: center;
+      margin-top: 10px;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    svg {
+      path {
+        box-shadow: inset 3px 3px 10px 1px black;
+      }
+    }
+  }
+
 
   .screen {
     display: none;
@@ -21,6 +74,8 @@ html, body {
   .video {
     width: 100%;
     height: 100%;
+    z-index: 1;
+
   }
 
   &.screen-share {
@@ -40,13 +95,16 @@ html, body {
       right: 0;
       position: absolute;
 
+      &:hover {
+        opacity: 0.1;
+      }
+
     }
   }
 }
 
 
 .peer-list {
-  background-color: #383838;
 
   display: grid;
   height: 100vh;
@@ -61,10 +119,10 @@ html, body {
     right: 10px;
     width: 100%;
     max-width: 180px;
-    margin:10px auto;
+    margin: 10px auto;
     overflow: hidden;
     display: grid;
-    z-index: 1000;
+    z-index: 20;
     cursor: pointer;
 
     grid-template-columns: repeat(3, 1fr);
@@ -77,10 +135,28 @@ html, body {
 
     display: flex;
     flex-direction: column;
-    width: 199px;
+    width: 200px;
 
     .peer {
       height: auto;
+
+      .avatar-placeholder {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        line-height: 100px;
+        z-index: -1;
+        transform: translate(0%, 0%);
+
+        .portrait{
+          margin: auto;
+          width: 50px;
+          height: 50px;
+        }
+        .title {
+          font-size: 10%;
+        }
+      }
     }
   }
 
@@ -93,26 +169,23 @@ html, body {
   height: 100vh;
   float: left;
 
-  .peer {
-    background-color: #3c3c3C;
-
-  }
 }
 
 
 .button {
   padding: 10px;
   text-align: center;
-  border:1px solid rgba(0,0,0,0.1);
-  &.active{
-    background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  &.active {
+    background: rgba(0, 0, 0, 0.3);
   }
 
-  &:hover{
-    background: rgba(0,0,0,0.1);
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
   }
-  &:active{
-    background: rgba(0,0,0,0.2);
 
+  &:active {
+    background: rgba(0, 0, 0, 0.2);
   }
 }

@@ -66,12 +66,15 @@ export default class PeerManager {
 
         if (navigator.mediaDevices.getUserMedia) {
             await this.videoStart()
-            await this.audioStart()
+            //await this.audioStart()
         }
         this.layoutManager.insertPeer(this.localUser)
     }
 
-    sendMyStreams(peerId) {
+    sendMyStreams(peerId, avatar) {
+        this.remoteUsers[peerId] = new PeerClient(peerId)
+        this.remoteUsers[peerId].setAvatar(avatar);
+        this.layoutManager.insertPeer(this.remoteUsers[peerId])
         if (this.localUser.videoEnabled) this.call(peerId, this.localUser.videoStream, this.TYPE_VIDEO)
         if (this.localUser.audioEnabled) this.call(peerId, this.localUser.audioStream, this.TYPE_AUDIO)
         if (this.localUser.screenSharingEnabled) this.call(peerId, this.localUser.screenStream, this.TYPE_SCREENSHARE)
@@ -83,10 +86,6 @@ export default class PeerManager {
         callInstance.on('close', () => {
 
         })
-        if (!this.remoteUsers[peerId]) {
-            this.remoteUsers[peerId] = new PeerClient(peerId)
-            this.layoutManager.insertPeer(this.remoteUsers[peerId])
-        }
         this.remoteUsers[peerId].calls[type] = callInstance
     }
 
@@ -147,18 +146,21 @@ export default class PeerManager {
         for (let track of this.localUser.audioStream.getTracks()) {
             track.stop()
         }
+        this.localUser.toggleAudio(false)
         this.closeStream(this.TYPE_AUDIO)
     }
 
     async enableVideo() {
         this.localUser.videoEnabled = true
         await this.videoStart()
+        this.localUser.toggleVideo(true)
         this.openStream(this.localUser.videoStream, this.TYPE_VIDEO)
     }
 
     async enableAudio() {
         this.localUser.audioEnabled = true
         await this.audioStart()
+        this.localUser.toggleAudio(true)
         this.openStream(this.localUser.audioStream, this.TYPE_AUDIO)
     }
 
@@ -168,7 +170,7 @@ export default class PeerManager {
             this.localUser.screenSharingEnabled = true
             this.localUser.toggleScreen(true)
             this.openStream(this.localUser.screenStream, this.TYPE_SCREENSHARE)
-        }catch(e){
+        } catch (e) {
             //donothing
         }
     }

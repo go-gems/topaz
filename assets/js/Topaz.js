@@ -10,6 +10,7 @@ export default class Topaz {
     wsManager
     userList = {}
     controls
+
     constructor() {
         this.setupPeerManager()
         this.setupPeerHandlers()
@@ -28,7 +29,7 @@ export default class Topaz {
     initWs() {
         this.wsManager = new WsManager()
         this.wsManager.on("logged", (data) => {
-            this.userList = data.userList
+            this.peerManager.localUser.setAvatar(data.user.avatar)
         })
 
         this.wsManager.on("user-joined", data => {
@@ -36,14 +37,14 @@ export default class Topaz {
             let src = '/on.mp3';
             let audio = new Audio(src);
             audio.play();
-            this.peerManager.sendMyStreams(data.peerId)
+            this.peerManager.sendMyStreams(data.peerId, data.avatar)
             this.wsManager.send("call-me", {"from": this.peerId, "to": data.peerId})
             // from A to B
         })
         this.wsManager.on("call-request", data => {
             // B will store client A and make a call
             this.userList[data.peerId] = data
-            this.peerManager.sendMyStreams(data.peerId)
+            this.peerManager.sendMyStreams(data.peerId, data.avatar)
         })
 
         this.wsManager.on("user-left", (data) => {
@@ -51,7 +52,7 @@ export default class Topaz {
             this.peerManager.closeCall(data)
         })
 
-        this.wsManager.on("stream-status-changed", (data)=>{
+        this.wsManager.on("stream-status-changed", (data) => {
             this.peerManager.changeStreamStatus(data.peerId, data.type, data.on);
 
         })
