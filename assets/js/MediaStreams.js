@@ -1,5 +1,10 @@
 export async function VideoStream(callback) {
-    const stream = await navigator.mediaDevices.getUserMedia({video: true, audio: false})
+    const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+            width: {min: 400, ideal: 1200, max: 1920},
+            height: {min: 300, ideal: 800, max: 1080}
+        }, audio: false
+    })
     callback(stream)
 }
 

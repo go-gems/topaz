@@ -36,7 +36,6 @@ html, body {
   }
 
   .avatar-placeholder {
-    display: none;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -45,8 +44,6 @@ html, body {
     z-index: 10;
 
     .portrait {
-      border-radius: 0%;
-      overflow: hidden;
 
       svg {
       }
@@ -148,11 +145,10 @@ html, body {
 
       .avatar-placeholder {
         position: absolute;
-        width: 100px;
-        height: 100px;
-        line-height: 100px;
+        width: 50%;
+        height: 50%;
         z-index: -1;
-        transform: translate(0%, 0%);
+        transform: translate(-50%, -50%);
 
         .portrait {
           margin: auto;
@@ -161,7 +157,7 @@ html, body {
         }
 
         .title {
-          font-size: 10%;
+          display:none;
         }
       }
     }

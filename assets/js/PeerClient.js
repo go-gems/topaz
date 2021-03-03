@@ -1,6 +1,6 @@
 export default class PeerClient {
     videoEnabled = true
-    audioEnabled = false
+    audioEnabled = true
     screenSharingEnabled = false
 
     peerId
@@ -105,6 +105,7 @@ export default class PeerClient {
             onClose()
 
         };
+
     }
 
     joinAudioStream(stream) {
@@ -141,16 +142,26 @@ export default class PeerClient {
         } else {
             this.htmlElement.classList.remove("screen-share")
         }
+        this.showAvatar()
     }
 
     toggleVideo(b) {
         // Here show video on/off
         if (!b) {
             this.video.style.display = "none"
-            this.avatar.style.zIndex = "10";
         } else {
             this.video.style.display = "block"
-            this.avatar.style.zIndex = "-1";
+        }
+        this.showAvatar()
+    }
+
+    showAvatar() {
+        if (!this.videoEnabled && !this.screenSharingEnabled) {
+            this.avatar.style.display = "block"
+
+        } else {
+            this.avatar.style.display = "none"
+
         }
     }
 
