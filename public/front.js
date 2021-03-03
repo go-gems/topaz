@@ -1,5 +1,3 @@
-/**
- */
 function toggleSound(){
     topaz.controls.toggleAudio()
 }
@@ -9,5 +7,8 @@ function toggleVideo(){
 }
 function toggleScreen(){
     topaz.controls.toggleScreenSharing()
+}
 
+function showSettings(){
+    topaz.controls.settings()
 }

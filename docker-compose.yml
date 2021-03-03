@@ -1,7 +1,7 @@
 version: "3.4"
 services:
-  node:
+  topaz:
     build: .
-    image: decima/topaz:1.0
+    image: decima/topaz:2.0
     ports:
       - 3000:3000

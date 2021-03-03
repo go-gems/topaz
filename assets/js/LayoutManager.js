@@ -43,20 +43,25 @@ export default class LayoutManager {
 
 
     updateLayout() {
-        let counter = Math.ceil(Math.sqrt(this.videosContainer.childElementCount - 1))//for dev
-        let oppositeCounter = counter
-        if (counter < 3) {
-            oppositeCounter = 1
+
+
+        console.log(" : NUMBER OF CHILD:", this.videosContainer.childElementCount);
+        let childElementCount = this.videosContainer.childElementCount;
+        let counter = this.videosContainer.childElementCount;
+        let oppositeCounter = 1;
+        if (this.videosContainer.childElementCount > 3) {
+            counter = Math.ceil(Math.sqrt(this.videosContainer.childElementCount))
+            oppositeCounter = counter
+            if (childElementCount <= counter * (counter - 1)) {
+                oppositeCounter = counter - 1
+            }
         }
+
         let direction = "row"
         if (window.innerWidth > window.innerHeight) {
-            this.videosContainer.style.gridTemplateColumns = `repeat(${counter},1fr)`;
-            this.videosContainer.style.gridTemplateRows = `repeat(${oppositeCounter},1fr)`;
-
+            this.videosContainer.style.gridTemplate = `repeat(${oppositeCounter},1fr) / repeat(${counter},1fr)`;
         } else {
-            this.videosContainer.style.gridTemplateRows = `repeat(${counter},1fr)`;
-            this.videosContainer.style.gridTemplateColumns = `repeat(${oppositeCounter},1fr)`;
-
+            this.videosContainer.style.gridTemplate = `repeat(${counter},1fr) / repeat(${oppositeCounter},1fr)`;
             direction = "column"
         }
         this.videosContainer.style.gridAutoFlow = direction

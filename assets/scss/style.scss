@@ -10,7 +10,7 @@ html {
 html, body {
   margin: 0px;
   padding: 0px;
-
+  overflow: hidden;
 }
 
 
@@ -22,6 +22,7 @@ html, body {
   box-sizing: border-box;
 
   .audio-indicator {
+    display: none;
     position: absolute;
     top: 50%;
     right: 10px;
@@ -35,6 +36,7 @@ html, body {
   }
 
   .avatar-placeholder {
+    display: none;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -43,11 +45,10 @@ html, body {
     z-index: 10;
 
     .portrait {
-      border-radius: 100%;
+      border-radius: 0%;
       overflow: hidden;
 
       svg {
-        color: black;
       }
     }
 
@@ -103,6 +104,23 @@ html, body {
   }
 }
 
+.controls {
+  background: $primary-color;
+
+  border-radius: 8px;
+  position: absolute;
+  top: 0;
+  right: 10px;
+  width: 100%;
+  max-width: 180px;
+  margin: 10px auto;
+  overflow: hidden;
+  display: grid;
+  z-index: 20;
+  cursor: pointer;
+
+  grid-template-columns: repeat(3, 1fr);
+}
 
 .peer-list {
 
@@ -110,25 +128,12 @@ html, body {
   height: 100vh;
   width: 100vw;
 
-  .controls {
-    background: $primary-color;
-
-    border-radius: 8px;
-    position: absolute;
-    top: 0;
-    right: 10px;
-    width: 100%;
-    max-width: 180px;
-    margin: 10px auto;
-    overflow: hidden;
-    display: grid;
-    z-index: 20;
-    cursor: pointer;
-
-    grid-template-columns: repeat(3, 1fr);
-  }
 
   &.focus-layout {
+    padding-top: 70px;
+    height: calc(100vh);
+    box-sizing: border-box;
+
     .controls {
       position: static;
     }
@@ -136,6 +141,7 @@ html, body {
     display: flex;
     flex-direction: column;
     width: 200px;
+    overflow: auto;
 
     .peer {
       height: auto;
@@ -148,11 +154,12 @@ html, body {
         z-index: -1;
         transform: translate(0%, 0%);
 
-        .portrait{
+        .portrait {
           margin: auto;
           width: 50px;
           height: 50px;
         }
+
         .title {
           font-size: 10%;
         }

@@ -26,7 +26,7 @@ export default class PeerClient {
         let image = document.createElement("div")
         image.classList.add("portrait")
         image.innerHTML = avatar.image
-        image.style.backgroundColor = avatar.color
+        image.style.color = avatar.color
         this.avatar.appendChild(image)
         let name = document.createElement("div")
         name.classList.add("title")
@@ -70,12 +70,6 @@ export default class PeerClient {
     _callsBar_init() {
 
         this.callsBar = document.createElement("div")
-        /**setInterval(()=>{this.drawCallsBar()},2000);
-         }
-         drawCallsBar(){
-        let audioState = this.audioEnabled?"AON":"AOFF";
-        let videoState = this.videoEnabled?"VON":"VOFF";
-        this.callsBar.innerHTML=`<span>${audioState}</span><span>${videoState}</span>`;**/
     }
 
     joinVideoStream(stream) {

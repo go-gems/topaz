@@ -1,3 +1,5 @@
+import {getAudioInputList, getVideoInputList} from "./MediaStreams.js";
+
 export default class Controls {
 
     peerManager
@@ -8,9 +10,9 @@ export default class Controls {
     }
 
     updateControls() {
-        this.toggleButtonEffect("#sound-button", this.peerManager.localUser.audioEnabled,"fa-microphone","fa-microphone-slash")
-        this.toggleButtonEffect("#video-button", this.peerManager.localUser.videoEnabled,"fa-video","fa-video-slash")
-        this.toggleButtonEffect("#screen-button", this.peerManager.localUser.screenSharingEnabled,"fa-screen","fa-screen")
+        this.toggleButtonEffect("#sound-button", this.peerManager.localUser.audioEnabled, "fa-microphone", "fa-microphone-slash")
+        this.toggleButtonEffect("#video-button", this.peerManager.localUser.videoEnabled, "fa-video", "fa-video-slash")
+        this.toggleButtonEffect("#screen-button", this.peerManager.localUser.screenSharingEnabled, "fa-screen", "fa-screen")
     }
 
     toggleButtonEffect(selector, state, iconTrue, iconFalse) {
@@ -42,6 +44,14 @@ export default class Controls {
     async toggleScreenSharing() {
         await (this.peerManager.localUser.screenSharingEnabled ? this.peerManager.disableScreenShare() : this.peerManager.enableScreenShare())
         this.updateControls()
+    }
+
+    async settings() {
+        let e = await getVideoInputList();
+        console.log(e)
+
+        let f = await getAudioInputList();
+        console.log(f)
     }
 
 }

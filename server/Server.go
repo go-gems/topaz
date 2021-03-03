@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -32,7 +32,7 @@ var clientList = map[string]Client{}
 var settings = Settings{Version: "2.0"}
 var upgrader = websocket.Upgrader{}
 
-func main() {
+func Run() {
 	http.HandleFunc("/settings.js", settingsHandler)
 	http.Handle("/", http.FileServer(http.Dir("./public")))
 

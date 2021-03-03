@@ -1,7 +1,8 @@
-FROM node:lts
+FROM node:lts as frontBuild
 
 ADD . /app
 WORKDIR /app
-RUN npm install
-EXPOSE 3000
-ENTRYPOINT ["node", "app.js"]
+RUN yarn && yarn build
+
+
+FROM golang:1.16 as backBuild

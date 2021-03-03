@@ -13,6 +13,44 @@ export async function SharedScreen(callback) {
 
 }
 
+export async function getVideoInputList() {
+    let content = []
+    await navigator
+        .mediaDevices
+        .enumerateDevices()
+        .then(devices => {
+            for (let device of devices) {
+                switch (device.kind) {
+                    case "videoinput":
+                        content.push(device);
+                        break;
+                    default:
+                        break
+                }
+            }
+        })
+    return content;
+}
+
+export async function getAudioInputList() {
+    let content = []
+    await navigator
+        .mediaDevices
+        .enumerateDevices()
+        .then(devices => {
+            for (let device of devices) {
+                switch (device.kind) {
+                    case "audioinput":
+                        content.push(device);
+                        break;
+                    default:
+                        break
+                }
+            }
+        })
+    return content;
+}
+
 function screenCapture() {
     if (navigator.getDisplayMedia) {
         return navigator.getDisplayMedia({video: true});

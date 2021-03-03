@@ -1,0 +1,6 @@
+node_modules
+.idea
+*.sqlite
+config.json
+yarn-error.log
+public/dist/
