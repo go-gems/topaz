@@ -2,6 +2,6 @@ version: "3.4"
 services:
   topaz:
     build: .
-    image: decima/topaz:2.0
+    image: decima/topaz:2.0-beta
     ports:
-      - 3000:3000
+      - 3001:3000

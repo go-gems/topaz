@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ type Avatar struct {
 	Color string `json:"color"`
 	Image string `json:"image"`
 }
+
 
 func PickOneAvatar() *Avatar {
 	avatar := Avatar{}

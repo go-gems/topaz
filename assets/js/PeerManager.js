@@ -146,7 +146,7 @@ export default class PeerManager {
         for (let track of this.localUser.audioStream.getTracks()) {
             track.stop()
         }
-        this.localUser.toggleAudio(false)
+       // this.localUser.toggleAudio(false)
         this.closeStream(this.TYPE_AUDIO)
     }
 
@@ -160,7 +160,7 @@ export default class PeerManager {
     async enableAudio() {
         this.localUser.audioEnabled = true
         await this.audioStart()
-        this.localUser.toggleAudio(true)
+        //this.localUser.toggleAudio(true)
         this.openStream(this.localUser.audioStream, this.TYPE_AUDIO)
     }
 

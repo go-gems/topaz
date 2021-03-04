@@ -130,7 +130,7 @@ export default class PeerClient {
     }
 
     toggleAudio(b) {
-        this.audio.muted = !b
+       // this.audio.muted = !b
         this.audio.muted
             ? this.audioIndicator.classList.remove("audio-indicator-disabled")
             : this.audioIndicator.classList.add("audio-indicator-disabled")
